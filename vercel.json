@@ -5,9 +5,8 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/index.mjs": {
-      "includeFiles": "data/planete_bleue.db",
-      "maxDuration": 30
+    "api/index.js": {
+      "includeFiles": "data/planete_bleue.db"
     }
   },
   "rewrites": [

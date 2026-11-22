@@ -10,9 +10,9 @@
     "dev": "tsx server.ts",
     "start": "node server.ts",
     "build": "vite build && npm run build:api",
-    "build:api": "esbuild server/vercel.ts --bundle --platform=node --format=esm --packages=external --outfile=api/index.mjs",
+    "build:api": "esbuild server/vercel.ts --bundle --platform=node --format=esm --packages=external --outfile=api/index.js",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js api/index.mjs",
+    "clean": "rm -rf dist server.js api/index.js",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
