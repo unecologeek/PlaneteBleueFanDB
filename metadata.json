@@ -1,0 +1,6 @@
+{
+  "name": "La Planète Bleue — Index & Archive des Titres",
+  "description": "Base de données indexée et moteur de recherche des titres, auteurs, durées, émissions et dates de diffusion du podcast La Planète Bleue.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
