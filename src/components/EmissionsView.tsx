@@ -58,7 +58,7 @@ export function EmissionsView({ years, onSelectEmission }: EmissionsViewProps) {
 
   return (
     <div className="space-y-5">
-      <div className="bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg p-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+      <div className="bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg p-3.5 sm:p-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-[#030925]/45 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
@@ -66,16 +66,16 @@ export function EmissionsView({ years, onSelectEmission }: EmissionsViewProps) {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Filtrer par numéro (ex : 1054), date ou mot-clé…"
-            className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-[#DDD8D0] rounded-md focus:outline-none focus:border-[#144980] transition-colors"
+            className="w-full pl-9 pr-3 py-2.5 sm:py-2 min-h-[44px] text-base sm:text-sm bg-white border border-[#DDD8D0] rounded-md focus:outline-none focus:border-[#144980] transition-colors"
           />
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto">
           <select
             value={year}
             onChange={(e) => setYear(e.target.value)}
             aria-label="Filtrer par année"
-            className="px-3 py-2 text-sm bg-white border border-[#DDD8D0] rounded-md focus:outline-none focus:border-[#144980]"
+            className="flex-1 sm:flex-initial min-h-[44px] px-3 py-2 text-base sm:text-sm bg-white border border-[#DDD8D0] rounded-md focus:outline-none focus:border-[#144980]"
           >
             <option value="">Toutes les années</option>
             {years.map((y) => (
@@ -85,14 +85,14 @@ export function EmissionsView({ years, onSelectEmission }: EmissionsViewProps) {
             ))}
           </select>
 
-          <span className="text-xs font-mono tabular-nums text-[#030925]/65 whitespace-nowrap">
+          <span className="text-xs font-mono tabular-nums text-[#030925]/65 whitespace-nowrap shrink-0">
             {formatNumberFR(total)} émission{total > 1 ? 's' : ''}
           </span>
         </div>
       </div>
 
       {loading && items.length === 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
@@ -114,7 +114,7 @@ export function EmissionsView({ years, onSelectEmission }: EmissionsViewProps) {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {items.map((em) => (
             <button
               key={em.id}
@@ -126,7 +126,7 @@ export function EmissionsView({ years, onSelectEmission }: EmissionsViewProps) {
                 <EmissionOrbitalEmblem number={em.number} slug={em.slug} compact />
               </div>
 
-              <div className="p-4 space-y-1.5 flex-1 flex flex-col justify-between w-full">
+              <div className="p-3.5 sm:p-4 space-y-1.5 flex-1 flex flex-col justify-between w-full">
                 <div>
                   <div className="flex items-baseline justify-between gap-2">
                     <h3 className="font-display text-base font-semibold text-[#030925] group-hover:text-[#144980] transition-colors">

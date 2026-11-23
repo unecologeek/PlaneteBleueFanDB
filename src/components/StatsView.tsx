@@ -173,7 +173,7 @@ export function StatsView({
   return (
     <div className="space-y-6">
       {/* Duration enrichment bar */}
-      <div className="bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg p-4 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <h3 className="font-display text-base font-semibold text-[#030925]">
             Couverture des durées musicales
@@ -193,7 +193,7 @@ export function StatsView({
           type="button"
           disabled={stats.syncStatus.running}
           onClick={onEnrichBatch}
-          className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-[#FAF8F5] bg-[#144980] hover:bg-[#030925] rounded-md transition-colors disabled:opacity-50 whitespace-nowrap shrink-0"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] text-xs font-semibold text-[#FAF8F5] bg-[#144980] hover:bg-[#030925] rounded-md transition-colors disabled:opacity-50 whitespace-nowrap shrink-0"
         >
           {stats.syncStatus.running && stats.syncStatus.mode === 'enrich' ? (
             <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -204,11 +204,42 @@ export function StatsView({
         </button>
       </div>
 
+      {/* Mobile quick-jump bar (non-sticky) */}
+      <div className="lg:hidden grid grid-cols-4 gap-1.5" aria-label="Accès rapide aux classements">
+        <a
+          href="#stats-authors"
+          className="min-h-[40px] flex items-center justify-center px-2 py-1.5 rounded-md bg-[#FAF8F5] border border-[#DDD8D0] text-xs font-display font-semibold text-[#030925] hover:border-[#144980] text-center"
+        >
+          Auteurs
+        </a>
+        <a
+          href="#stats-top-tracks"
+          className="min-h-[40px] flex items-center justify-center px-2 py-1.5 rounded-md bg-[#FAF8F5] border border-[#DDD8D0] text-xs font-display font-semibold text-[#030925] hover:border-[#144980] text-center"
+        >
+          Titres
+        </a>
+        <a
+          href="#stats-countries"
+          className="min-h-[40px] flex items-center justify-center px-2 py-1.5 rounded-md bg-[#FAF8F5] border border-[#DDD8D0] text-xs font-display font-semibold text-[#030925] hover:border-[#144980] text-center"
+        >
+          Pays
+        </a>
+        <a
+          href="#stats-years"
+          className="min-h-[40px] flex items-center justify-center px-2 py-1.5 rounded-md bg-[#FAF8F5] border border-[#DDD8D0] text-xs font-display font-semibold text-[#030925] hover:border-[#144980] text-center"
+        >
+          Années
+        </a>
+      </div>
+
       {/* 2x2 Grid of Infinite-Scroll Ranking Panels */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Panel 1: Auteurs les plus diffusés */}
-        <div className="bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg flex flex-col overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#DDD8D0] bg-[#ECE8E1]/50 space-y-2.5">
+        <div
+          id="stats-authors"
+          className="scroll-mt-16 bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg flex flex-col overflow-hidden"
+        >
+          <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[#DDD8D0] bg-[#ECE8E1]/50 space-y-2.5">
             <div className="flex items-baseline justify-between gap-3">
               <h3 className="font-display text-base font-semibold text-[#030925]">
                 Classement des auteurs
@@ -218,27 +249,27 @@ export function StatsView({
               </span>
             </div>
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-[#030925]/45 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Search className="w-4 sm:w-3.5 h-4 sm:h-3.5 text-[#030925]/45 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 value={authorQuery}
                 onChange={(e) => setAuthorQuery(e.target.value)}
                 placeholder="Filtrer dans le classement des auteurs…"
-                className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-[#DDD8D0] rounded-md focus:outline-none focus:border-[#144980]"
+                className="w-full pl-9 sm:pl-8 pr-3 py-2 sm:py-1.5 text-base sm:text-xs bg-white border border-[#DDD8D0] rounded-md focus:outline-none focus:border-[#144980]"
               />
             </div>
           </div>
 
           <div
             ref={authorsScrollRef}
-            className="h-[440px] overflow-y-auto px-5 divide-y divide-[#DDD8D0]/60"
+            className="h-[340px] sm:h-[440px] overflow-y-auto overscroll-contain px-4 sm:px-5 divide-y divide-[#DDD8D0]/60"
           >
             {authors.map((a, idx) => (
               <button
                 key={`${a.author}-${idx}`}
                 type="button"
                 onClick={() => onFilterByAuthor(a.author)}
-                className="w-full py-2.5 flex items-center justify-between gap-3 text-left hover:bg-[#ECE8E1]/60 px-2 -mx-2 rounded transition-colors"
+                className="w-full min-h-[44px] py-2.5 flex items-center justify-between gap-3 text-left hover:bg-[#ECE8E1]/60 px-2 -mx-2 rounded transition-colors"
               >
                 <div className="flex items-baseline gap-2.5 min-w-0">
                   <span className="text-xs font-mono tabular-nums text-[#144980]/70 w-8 shrink-0">
@@ -264,8 +295,11 @@ export function StatsView({
         </div>
 
         {/* Panel 2: Titres les plus diffusés */}
-        <div className="bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg flex flex-col overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#DDD8D0] bg-[#ECE8E1]/50 flex items-baseline justify-between gap-3">
+        <div
+          id="stats-top-tracks"
+          className="scroll-mt-16 bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg flex flex-col overflow-hidden"
+        >
+          <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[#DDD8D0] bg-[#ECE8E1]/50 flex items-baseline justify-between gap-3">
             <div>
               <h3 className="font-display text-base font-semibold text-[#030925]">
                 Titres les plus diffusés
@@ -281,14 +315,14 @@ export function StatsView({
 
           <div
             ref={topTracksScrollRef}
-            className="h-[468px] overflow-y-auto px-5 divide-y divide-[#DDD8D0]/60"
+            className="h-[340px] sm:h-[468px] overflow-y-auto overscroll-contain px-4 sm:px-5 divide-y divide-[#DDD8D0]/60"
           >
             {topTracks.map((t, idx) => (
               <button
                 key={t.id}
                 type="button"
                 onClick={() => onFilterByTrack(`${t.author} ${t.title}`)}
-                className="w-full py-2.5 flex items-start justify-between gap-3 text-left hover:bg-[#ECE8E1]/60 px-2 -mx-2 rounded transition-colors"
+                className="w-full min-h-[44px] py-2.5 flex items-start justify-between gap-3 text-left hover:bg-[#ECE8E1]/60 px-2 -mx-2 rounded transition-colors"
               >
                 <div className="flex items-baseline gap-2.5 min-w-0">
                   <span className="text-xs font-mono tabular-nums text-[#144980]/70 w-8 shrink-0">
@@ -327,8 +361,11 @@ export function StatsView({
         </div>
 
         {/* Panel 3: Origines géographiques */}
-        <div className="bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg flex flex-col overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#DDD8D0] bg-[#ECE8E1]/50 space-y-2.5">
+        <div
+          id="stats-countries"
+          className="scroll-mt-16 bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg flex flex-col overflow-hidden"
+        >
+          <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[#DDD8D0] bg-[#ECE8E1]/50 space-y-2.5">
             <div className="flex items-baseline justify-between gap-3">
               <h3 className="font-display text-base font-semibold text-[#030925]">
                 Origines géographiques
@@ -338,27 +375,27 @@ export function StatsView({
               </span>
             </div>
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-[#030925]/45 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Search className="w-4 sm:w-3.5 h-4 sm:h-3.5 text-[#030925]/45 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 value={countryQuery}
                 onChange={(e) => setCountryQuery(e.target.value)}
                 placeholder="Filtrer par pays ou ville…"
-                className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-[#DDD8D0] rounded-md focus:outline-none focus:border-[#144980]"
+                className="w-full pl-9 sm:pl-8 pr-3 py-2 sm:py-1.5 text-base sm:text-xs bg-white border border-[#DDD8D0] rounded-md focus:outline-none focus:border-[#144980]"
               />
             </div>
           </div>
 
           <div
             ref={countriesScrollRef}
-            className="h-[420px] overflow-y-auto px-5 divide-y divide-[#DDD8D0]/60"
+            className="h-[340px] sm:h-[420px] overflow-y-auto overscroll-contain px-4 sm:px-5 divide-y divide-[#DDD8D0]/60"
           >
             {countries.map((c, idx) => (
               <button
                 key={`${c.country}-${idx}`}
                 type="button"
                 onClick={() => onFilterByCountry(c.country)}
-                className="w-full py-2.5 flex items-center justify-between gap-3 text-left hover:bg-[#ECE8E1]/60 px-2 -mx-2 rounded transition-colors"
+                className="w-full min-h-[44px] py-2.5 flex items-center justify-between gap-3 text-left hover:bg-[#ECE8E1]/60 px-2 -mx-2 rounded transition-colors"
               >
                 <div className="flex items-baseline gap-2.5 min-w-0">
                   <span className="text-xs font-mono tabular-nums text-[#144980]/70 w-8 shrink-0">
@@ -384,8 +421,11 @@ export function StatsView({
         </div>
 
         {/* Panel 4: Émissions par année */}
-        <div className="bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg flex flex-col overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#DDD8D0] bg-[#ECE8E1]/50 flex items-baseline justify-between gap-3">
+        <div
+          id="stats-years"
+          className="scroll-mt-16 bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg flex flex-col overflow-hidden"
+        >
+          <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[#DDD8D0] bg-[#ECE8E1]/50 flex items-baseline justify-between gap-3">
             <div>
               <h3 className="font-display text-base font-semibold text-[#030925]">
                 Émissions par année
@@ -401,7 +441,7 @@ export function StatsView({
 
           <div
             ref={yearsScrollRef}
-            className="h-[468px] overflow-y-auto px-5 py-2 space-y-1"
+            className="h-[340px] sm:h-[468px] overflow-y-auto overscroll-contain px-4 sm:px-5 py-2 space-y-1"
           >
             {yearsList.map((y) => {
               const pct = Math.max(4, Math.round((y.count / yearsMaxCount) * 100));
@@ -410,18 +450,18 @@ export function StatsView({
                   key={y.year}
                   type="button"
                   onClick={() => onFilterByYear(y.year)}
-                  className="w-full flex items-center gap-3 py-2 px-2 -mx-2 rounded hover:bg-[#ECE8E1]/60 transition-colors"
+                  className="w-full min-h-[44px] flex items-center gap-2 sm:gap-3 py-2 px-2 -mx-2 rounded hover:bg-[#ECE8E1]/60 transition-colors"
                 >
-                  <span className="text-xs font-mono tabular-nums font-semibold text-[#030925] w-11 text-left shrink-0">
+                  <span className="text-xs font-mono tabular-nums font-semibold text-[#030925] w-10 sm:w-11 text-left shrink-0">
                     {y.year}
                   </span>
-                  <div className="flex-1 h-2 bg-[#DDD8D0] rounded-sm overflow-hidden">
+                  <div className="flex-1 min-w-[48px] h-2 bg-[#DDD8D0] rounded-sm overflow-hidden">
                     <div
                       className="h-full bg-[#144980] rounded-sm"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <span className="text-xs font-mono tabular-nums text-[#030925]/75 w-28 text-right shrink-0">
+                  <span className="text-[11px] sm:text-xs font-mono tabular-nums text-[#030925]/75 w-24 sm:w-28 text-right shrink-0">
                     {y.count} ém. · {formatNumberFR(y.track_plays)} t.
                   </span>
                 </button>

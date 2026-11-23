@@ -125,7 +125,7 @@ export function EmissionDrawer({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drawer Header in La Planète Bleue Blue */}
-        <div className="sticky top-0 z-10 bg-[#144980] text-[#FAF8F5] border-b border-[#030925]/20 px-6 py-4 flex items-center justify-between gap-4">
+        <div className="sticky top-0 z-10 bg-[#144980] text-[#FAF8F5] border-b border-[#030925]/20 px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-medium text-[#9ECAC2]">
               Archive des diffusions
@@ -136,21 +136,21 @@ export function EmissionDrawer({
                 </>
               )}
             </p>
-            <h2 className="font-display text-xl font-bold text-[#FAF8F5] truncate">
+            <h2 className="font-display text-lg sm:text-xl font-bold text-[#FAF8F5] truncate">
               {data ? data.emission.title : `Émission ${slug}`}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg text-[#ECE8E1]/80 hover:text-white hover:bg-[#030925]/30 transition-colors shrink-0 focus-visible:outline-2 focus-visible:outline-[#9ECAC2]"
+            className="w-11 h-11 flex items-center justify-center rounded-lg text-[#ECE8E1]/85 hover:text-white hover:bg-[#030925]/30 transition-colors shrink-0 focus-visible:outline-2 focus-visible:outline-[#9ECAC2]"
             aria-label="Fermer le panneau"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-6 space-y-6 flex-1">
+        <div className="p-4 sm:p-6 space-y-5 sm:space-y-6 flex-1">
           {loading && (
             <div className="flex items-center justify-center py-16 text-[#144980] gap-2 text-sm">
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -271,30 +271,30 @@ export function EmissionDrawer({
                         {list.map((track) => (
                           <div
                             key={`${track.version}-${track.position}-${track.track_id}`}
-                            className="px-4 py-3 flex items-start justify-between gap-4 hover:bg-white/[0.04] transition-colors"
+                            className="px-3 sm:px-4 py-3 flex items-start justify-between gap-3 sm:gap-4 hover:bg-white/[0.04] transition-colors"
                           >
-                            <div className="flex items-start gap-3 min-w-0">
-                              <span className="text-xs font-mono tabular-nums text-[#9ECAC2]/70 pt-0.5 w-6 shrink-0">
+                            <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
+                              <span className="text-xs font-mono tabular-nums text-[#9ECAC2]/70 pt-1 w-6 shrink-0">
                                 {String(track.position).padStart(2, '0')}
                               </span>
-                              <div className="min-w-0 space-y-0.5">
-                                <div className="flex items-center gap-2">
+                              <div className="min-w-0 flex-1 space-y-0.5">
+                                <div className="flex items-start gap-2">
                                   {track.preview_url && (
                                     <button
                                       type="button"
                                       onClick={() => togglePreview(track.track_id)}
-                                      className="p-1 rounded text-[#9ECAC2] hover:bg-white/10 transition-colors shrink-0"
+                                      className="w-9 h-9 min-w-[36px] min-h-[36px] -mt-0.5 flex items-center justify-center rounded-md text-[#9ECAC2] bg-white/5 hover:bg-white/15 transition-colors shrink-0"
                                       title="Écouter un extrait de 30s"
                                       aria-label={`Écouter un extrait de ${track.title}`}
                                     >
                                       {playingPreviewTrackId === track.track_id ? (
-                                        <Pause className="w-3.5 h-3.5" />
+                                        <Pause className="w-4 h-4" />
                                       ) : (
-                                        <Play className="w-3.5 h-3.5" />
+                                        <Play className="w-4 h-4" />
                                       )}
                                     </button>
                                   )}
-                                  <span className="text-sm font-bold text-white truncate">
+                                  <span className="text-sm font-bold text-white leading-snug break-words">
                                     {track.title}
                                   </span>
                                 </div>
@@ -306,7 +306,7 @@ export function EmissionDrawer({
                                       onFilterByAuthor(track.author);
                                       onClose();
                                     }}
-                                    className="font-semibold text-[#9ECAC2] hover:underline text-left uppercase tracking-wide"
+                                    className="font-semibold text-[#9ECAC2] hover:underline text-left uppercase tracking-wide py-0.5"
                                   >
                                     {track.author}
                                   </button>
@@ -335,7 +335,7 @@ export function EmissionDrawer({
                                         <button
                                           type="button"
                                           onClick={() => onSelectEmission(other.emission_slug)}
-                                          className="font-mono text-[#9ECAC2] hover:underline"
+                                          className="font-mono text-[#9ECAC2] hover:underline py-0.5"
                                         >
                                           nº {other.emission_number ?? other.emission_slug}
                                         </button>
@@ -356,7 +356,7 @@ export function EmissionDrawer({
                                   type="button"
                                   disabled={enrichingId === track.track_id}
                                   onClick={() => handleEnrichTrack(track.track_id)}
-                                  className="inline-flex items-center gap-1 text-xs text-[#ECE8E1]/70 hover:text-[#9ECAC2] px-2 py-1 rounded border border-white/15 hover:border-[#9ECAC2]/60 transition-colors whitespace-nowrap"
+                                  className="inline-flex items-center gap-1 min-h-[36px] text-xs text-[#ECE8E1]/75 hover:text-[#9ECAC2] px-2.5 py-1.5 rounded border border-white/15 hover:border-[#9ECAC2]/60 transition-colors whitespace-nowrap"
                                   title="Rechercher la durée (Deezer / iTunes)"
                                 >
                                   {enrichingId === track.track_id ? (

@@ -114,6 +114,10 @@ function detectSoftwareGl(): boolean {
   }
 }
 
+function computePortraitScale(aspect: number): number {
+  return aspect < 0.95 ? Math.min(1.55, 0.95 / Math.max(0.58, aspect)) : 1;
+}
+
 function computeTargetElevation(trackCount: number, maxCount: number, isSelected: boolean, isHovered: boolean): number {
   const logMax = Math.log1p(Math.max(1, maxCount));
   const raw = logMax > 0 ? Math.log1p(trackCount) / logMax : 0.4;
@@ -208,7 +212,9 @@ export function GlobeView({
   const [showNetwork, setShowNetwork] = useState(true);
   const [showClouds, setShowClouds] = useState(true);
   const [autoRotate, setAutoRotate] = useState(true);
-  const [dockCollapsed, setDockCollapsed] = useState(false);
+  const [dockCollapsed, setDockCollapsed] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth < 640
+  );
 
   // API Data
   const [globeData, setGlobeData] = useState<GlobeResponse | null>(null);
@@ -471,17 +477,23 @@ export function GlobeView({
   const focusCountry = useCallback((isoId: string, lat: number, lng: number) => {
     setSelectedIso(isoId);
     selectedIsoRef.current = isoId;
+    const cw = mountRef.current?.clientWidth || window.innerWidth;
+    const ch = mountRef.current?.clientHeight || window.innerHeight;
+    const scale = computePortraitScale(cw / Math.max(1, ch));
     const dir = latLngToVec3(lat, lng, 1, new THREE.Vector3()).normalize();
     dir.y = Math.min(0.85, dir.y + 0.14);
     dir.normalize();
-    flyTargetCamPosRef.current = dir.multiplyScalar(2.42);
+    flyTargetCamPosRef.current = dir.multiplyScalar(2.42 * scale);
     requestRenderRef.current?.();
   }, []);
 
   const resetCamera = useCallback(() => {
     setSelectedIso(null);
     selectedIsoRef.current = null;
-    flyTargetCamPosRef.current = DEFAULT_CAM_POS.clone();
+    const cw = mountRef.current?.clientWidth || window.innerWidth;
+    const ch = mountRef.current?.clientHeight || window.innerHeight;
+    const scale = computePortraitScale(cw / Math.max(1, ch));
+    flyTargetCamPosRef.current = DEFAULT_CAM_POS.clone().multiplyScalar(scale);
     requestRenderRef.current?.();
   }, []);
 
@@ -501,9 +513,10 @@ export function GlobeView({
 
     const width = container.clientWidth || window.innerWidth;
     const height = container.clientHeight || window.innerHeight - 64;
+    const initScale = computePortraitScale(width / Math.max(1, height));
 
     const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100);
-    camera.position.copy(DEFAULT_CAM_POS);
+    camera.position.copy(DEFAULT_CAM_POS).multiplyScalar(initScale);
 
     const renderer = new THREE.WebGLRenderer({
       antialias: !isSoftwareGl,
@@ -515,6 +528,7 @@ export function GlobeView({
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.06;
+    renderer.domElement.style.touchAction = 'none';
 
     container.appendChild(renderer.domElement);
 
@@ -548,7 +562,7 @@ export function GlobeView({
     controls.dampingFactor = 0.065;
     controls.enablePan = false;
     controls.minDistance = 1.48;
-    controls.maxDistance = 5.4;
+    controls.maxDistance = 6.4;
     controls.rotateSpeed = 0.68;
     controls.zoomSpeed = 0.85;
     controls.autoRotateSpeed = 0.36;
@@ -1164,7 +1178,8 @@ export function GlobeView({
 
     const onPointerUp = (e: PointerEvent) => {
       const dist = Math.hypot(e.clientX - pointerDownX, e.clientY - pointerDownY);
-      if (dist >= 5) return;
+      const tolerance = e.pointerType === 'touch' ? 12 : 5;
+      if (dist >= tolerance) return;
       const hit = pickAtEvent(e);
       if (!hit) {
         if (selectedIsoRef.current !== null) {
@@ -1195,6 +1210,7 @@ export function GlobeView({
     };
 
     const onPointerMove = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return;
       const now = performance.now();
       if (now - lastMoveTime < 32) return;
       lastMoveTime = now;
@@ -1323,14 +1339,18 @@ export function GlobeView({
         const sx = (_tmpNdc.x * 0.5 + 0.5) * cw;
         const sy = (-_tmpNdc.y * 0.5 + 0.5) * ch;
 
-        if (sx < 48 || sx > cw - 48 || sy < 34 || sy > ch - 86) {
+        const isCompact = cw < 500;
+        const marginX = isCompact ? 20 : 48;
+        const maxLabels = isCompact ? 12 : 22;
+
+        if (sx < marginX || sx > cw - marginX || sy < 34 || sy > ch - 86) {
           el.style.opacity = '0';
           el.style.pointerEvents = 'none';
           continue;
         }
 
         // Screen-space declutter check (never hide selected country)
-        const halfW = 54;
+        const halfW = isCompact ? 44 : 54;
         const boxH = 22;
         const x0 = sx - halfW;
         const x1 = sx + halfW;
@@ -1348,7 +1368,7 @@ export function GlobeView({
           }
         }
 
-        if (overlaps || _placedBoxes.length >= 22) {
+        if (overlaps || _placedBoxes.length >= maxLabels) {
           el.style.opacity = '0';
           el.style.pointerEvents = 'none';
           continue;
@@ -1585,7 +1605,7 @@ export function GlobeView({
   }, [globeData]);
 
   return (
-    <div className="relative w-full h-[calc(100vh-4rem)] min-h-[580px] bg-[#071230] overflow-hidden select-none">
+    <div className="relative w-full h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-4rem)] min-h-[460px] bg-[#071230] overflow-hidden select-none">
       {/* Isolated WebGL Canvas Mount */}
       <div ref={mountRef} className="w-full h-full" />
 
@@ -1623,13 +1643,14 @@ export function GlobeView({
       </div>
 
       {/* Top-Left Compact Telemetry & Relief Legend (No backdrop-blur over WebGL) */}
-      <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 pointer-events-none max-w-[calc(100vw-2rem)]">
-        <div className="pointer-events-auto inline-flex flex-wrap items-center gap-x-4 gap-y-1.5 px-3.5 py-2 rounded-lg bg-[#09122B]/94 border border-[#E8BD6C]/35 text-xs text-[#FAF3DF]">
+      <div className="absolute top-2.5 left-2.5 right-2.5 sm:right-auto sm:top-4 sm:left-4 z-20 flex flex-col gap-1.5 sm:gap-2 pointer-events-none">
+        <div className="pointer-events-auto inline-flex flex-wrap items-center gap-x-2.5 sm:gap-x-4 gap-y-1 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg bg-[#09122B]/94 border border-[#E8BD6C]/35 text-[11px] sm:text-xs text-[#FAF3DF]">
           <div className="flex items-center gap-1.5 font-display font-bold tracking-wide text-[#E8BD6C]">
-            <Compass className="w-3.5 h-3.5" />
-            <span>Globe Sonore · Ligne Claire</span>
+            <Compass className="w-3.5 h-3.5 shrink-0" />
+            <span>Globe Sonore</span>
+            <span className="hidden sm:inline">· Ligne Claire</span>
           </div>
-          <span className="text-white/20" aria-hidden="true">
+          <span className="text-white/20 hidden sm:inline" aria-hidden="true">
             |
           </span>
           {loading && !globeData ? (
@@ -1638,7 +1659,7 @@ export function GlobeView({
               Chargement…
             </span>
           ) : globeData ? (
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono tabular-nums">
+            <div className="flex flex-wrap items-center gap-x-2.5 sm:gap-x-3 gap-y-0.5 font-mono tabular-nums">
               <span>
                 <strong className="text-white">{formatNumberFR(globeData.matchedTracksCount)}</strong>{' '}
                 <span className="text-[#ECE8E1]/70">titres</span>
@@ -1648,14 +1669,14 @@ export function GlobeView({
                 <strong className="text-[#6ED6C3]">
                   {formatNumberFR(globeData.matchedCountriesCount)}
                 </strong>{' '}
-                <span className="text-[#ECE8E1]/70">pays activés</span>
+                <span className="text-[#ECE8E1]/70">pays</span>
               </span>
               {showNetwork && globeData.arcs.length > 0 && (
                 <>
                   <span className="text-white/20">·</span>
                   <span>
                     <strong className="text-[#E8BD6C]">{globeData.arcs.length}</strong>{' '}
-                    <span className="text-[#ECE8E1]/70">connexions réseau</span>
+                    <span className="text-[#ECE8E1]/70">liens</span>
                   </span>
                 </>
               )}
@@ -1664,9 +1685,9 @@ export function GlobeView({
           ) : null}
         </div>
 
-        {/* Relief & Network Scale Bar */}
+        {/* Relief & Network Scale Bar (Desktop/Tablet) */}
         {globeData && (
-          <div className="inline-flex flex-wrap items-center gap-3 px-3 py-1.5 rounded-md bg-[#09122B]/90 border border-white/15 text-[11px] text-[#ECE8E1]/85 w-fit">
+          <div className="hidden sm:inline-flex flex-wrap items-center gap-3 px-3 py-1.5 rounded-md bg-[#09122B]/90 border border-white/15 text-[11px] text-[#ECE8E1]/85 w-fit">
             <div className="flex items-center gap-1.5">
               <span>Relief</span>
               <span className="font-mono text-[#6ED6C3]">1</span>
@@ -1771,9 +1792,13 @@ export function GlobeView({
         </div>
       )}
 
-      {/* Selected Country Inspection Panel (Docked Top-Right, Never Occluding Center) */}
+      {/* Selected Country Inspection Panel (Bottom Sheet on Mobile, Docked Top-Right on Desktop) */}
       {selectedIso && (
-        <aside className="absolute top-4 right-4 z-20 w-[340px] max-w-[calc(100vw-2rem)] max-h-[calc(100%-9.5rem)] flex flex-col rounded-xl bg-[#09122B]/96 border border-[#E8BD6C]/50 text-[#FAF3DF] shadow-2xl overflow-hidden">
+        <aside className="fixed md:absolute inset-x-0 bottom-0 md:inset-auto md:top-4 md:right-4 z-30 md:z-20 w-full md:w-[340px] md:max-w-[calc(100vw-2rem)] max-h-[60dvh] md:max-h-[calc(100%-9.5rem)] flex flex-col rounded-t-2xl md:rounded-xl bg-[#09122B]/96 border-t border-x md:border border-[#E8BD6C]/50 text-[#FAF3DF] shadow-2xl overflow-hidden">
+          <div className="md:hidden pt-2 pb-0.5 flex justify-center bg-[#0E1B3D]">
+            <span className="w-10 h-1 rounded-full bg-white/25" aria-hidden="true" />
+          </div>
+
           <div className="px-4 py-3 border-b border-white/10 flex items-start justify-between gap-3 bg-[#0E1B3D]">
             <div className="min-w-0">
               <div className="text-[11px] uppercase tracking-wider font-display text-[#E8BD6C]">
@@ -1798,7 +1823,7 @@ export function GlobeView({
             <button
               type="button"
               onClick={() => setSelectedIso(null)}
-              className="p-1.5 rounded-md text-[#ECE8E1]/70 hover:text-white hover:bg-white/10 transition-colors shrink-0"
+              className="w-10 h-10 flex items-center justify-center rounded-md text-[#ECE8E1]/75 hover:text-white hover:bg-white/10 transition-colors shrink-0"
               aria-label="Fermer la fiche pays"
             >
               <X className="w-4 h-4" />
@@ -1807,53 +1832,53 @@ export function GlobeView({
 
           {selectedBucket && (
             <>
-              {selectedBucket.topAuthors.length > 0 && (
-                <div className="px-4 py-2.5 border-b border-white/10 bg-[#0A1533]">
-                  <div className="text-[11px] text-[#ECE8E1]/60 mb-1">Artistes principaux</div>
-                  <div className="text-xs text-[#9ECAC2] font-medium leading-relaxed">
-                    {selectedBucket.topAuthors.join(' · ')}
+              <div className="flex-1 overflow-y-auto overscroll-contain divide-y divide-white/10">
+                {selectedBucket.topAuthors.length > 0 && (
+                  <div className="px-4 py-2.5 bg-[#0A1533]">
+                    <div className="text-[11px] text-[#ECE8E1]/60 mb-1">Artistes principaux</div>
+                    <div className="text-xs text-[#9ECAC2] font-medium leading-relaxed">
+                      {selectedBucket.topAuthors.join(' · ')}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {selectedConnections.length > 0 && (
-                <div className="px-4 py-2.5 border-b border-white/10 bg-[#0A1533]">
-                  <div className="text-[11px] text-[#ECE8E1]/60 mb-1.5">
-                    Pays reliés par les mêmes émissions ({selectedConnections.length})
+                {selectedConnections.length > 0 && (
+                  <div className="px-4 py-2.5 bg-[#0A1533]">
+                    <div className="text-[11px] text-[#ECE8E1]/60 mb-1.5">
+                      Pays reliés par les mêmes émissions ({selectedConnections.length})
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedConnections.map((conn) => (
+                        <button
+                          key={conn.isoId}
+                          type="button"
+                          onClick={() => focusCountry(conn.isoId, conn.lat, conn.lng)}
+                          title={
+                            conn.emissions.length > 0
+                              ? `Émissions : ${conn.emissions
+                                  .slice(0, 5)
+                                  .map((e) => `nº ${e.number ?? e.slug}`)
+                                  .join(', ')}`
+                              : undefined
+                          }
+                          className={`min-h-[32px] px-2.5 py-1 rounded text-[11px] border transition-colors ${
+                            conn.weight >= 5
+                              ? 'border-[#E8BD6C]/60 bg-[#E8BD6C]/15 text-[#FAF3DF] hover:bg-[#E8BD6C]/30'
+                              : 'border-[#73DCD0]/50 bg-[#73DCD0]/10 text-[#9ECAC2] hover:bg-[#73DCD0]/25'
+                          }`}
+                        >
+                          <span>{conn.nameFr}</span>
+                          {conn.emissions[0] && (
+                            <span className="ml-1 font-mono text-[10px] text-[#E8BD6C]">
+                              nº {conn.emissions[0].number ?? conn.emissions[0].slug}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {selectedConnections.map((conn) => (
-                      <button
-                        key={conn.isoId}
-                        type="button"
-                        onClick={() => focusCountry(conn.isoId, conn.lat, conn.lng)}
-                        title={
-                          conn.emissions.length > 0
-                            ? `Émissions : ${conn.emissions
-                                .slice(0, 5)
-                                .map((e) => `nº ${e.number ?? e.slug}`)
-                                .join(', ')}`
-                            : undefined
-                        }
-                        className={`px-2 py-0.5 rounded text-[11px] border transition-colors ${
-                          conn.weight >= 5
-                            ? 'border-[#E8BD6C]/60 bg-[#E8BD6C]/15 text-[#FAF3DF] hover:bg-[#E8BD6C]/30'
-                            : 'border-[#73DCD0]/50 bg-[#73DCD0]/10 text-[#9ECAC2] hover:bg-[#73DCD0]/25'
-                        }`}
-                      >
-                        <span>{conn.nameFr}</span>
-                        {conn.emissions[0] && (
-                          <span className="ml-1 font-mono text-[10px] text-[#E8BD6C]">
-                            nº {conn.emissions[0].number ?? conn.emissions[0].slug}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+                )}
 
-              <div className="flex-1 overflow-y-auto divide-y divide-white/10">
                 {selectedBucket.sampleTracks.map((t) => {
                   const isPlaying = playingPreviewTrackId === t.id;
                   const isLoadingPreview = loadingPreviewTrackId === t.id;
@@ -1862,12 +1887,12 @@ export function GlobeView({
                   return (
                     <div key={t.id} className="px-4 py-2.5 hover:bg-white/5 transition-colors">
                       <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-start gap-2 min-w-0">
+                        <div className="flex items-start gap-2.5 min-w-0">
                           <button
                             type="button"
                             onClick={() => togglePreview(t.id)}
                             disabled={isLoadingPreview}
-                            className={`mt-0.5 p-1.5 rounded-md border transition-colors shrink-0 ${
+                            className={`w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-md border transition-colors shrink-0 ${
                               isPlaying
                                 ? 'bg-[#E8BD6C] text-[#09122B] border-[#E8BD6C]'
                                 : t.preview_url
@@ -1878,15 +1903,15 @@ export function GlobeView({
                             aria-label={`Écouter un extrait de ${t.title}`}
                           >
                             {isLoadingPreview ? (
-                              <Loader2 className="w-3 h-3 animate-spin" />
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
                             ) : isPlaying ? (
-                              <Pause className="w-3 h-3" />
+                              <Pause className="w-3.5 h-3.5" />
                             ) : (
-                              <Play className="w-3 h-3" />
+                              <Play className="w-3.5 h-3.5" />
                             )}
                           </button>
                           <div className="min-w-0">
-                            <div className="text-xs font-bold text-white leading-snug truncate">
+                            <div className="text-xs font-bold text-white leading-snug break-words">
                               {t.title}
                             </div>
                             <div className="text-[11px] text-[#9ECAC2] truncate">{t.author}</div>
@@ -1901,11 +1926,11 @@ export function GlobeView({
                           {formatDuration(t.duration_sec)}
                         </span>
                       </div>
-                      <div className="mt-1.5 pl-8 flex items-center justify-between gap-2 text-[11px]">
+                      <div className="mt-1.5 pl-11 flex items-center justify-between gap-2 text-[11px]">
                         <button
                           type="button"
                           onClick={() => onSelectEmission(t.emission_slug)}
-                          className="font-mono tabular-nums text-[#E8BD6C] hover:underline"
+                          className="font-mono tabular-nums text-[#E8BD6C] hover:underline py-0.5"
                         >
                           Émission nº {t.emission_number ?? t.emission_slug}
                           {t.broadcast_date_label ? ` · ${t.broadcast_date_label}` : ''}
@@ -1923,7 +1948,7 @@ export function GlobeView({
                 <button
                   type="button"
                   onClick={() => onInspectCountryInTable(selectedBucket.nameFr, q)}
-                  className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-md bg-[#E8BD6C] text-[#09122B] hover:bg-[#FAF3DF] transition-colors"
+                  className="w-full min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-md bg-[#E8BD6C] text-[#09122B] hover:bg-[#FAF3DF] transition-colors"
                 >
                   <span>Ouvrir dans la table des titres</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -1953,13 +1978,17 @@ export function GlobeView({
         </div>
       )}
 
-      {/* Collapsible Bottom Control Dock */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 w-[min(1020px,calc(100vw-2rem))]">
+      {/* Collapsible Bottom Control Dock (Hidden on mobile while country sheet is open) */}
+      <div
+        className={`absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 w-[min(1020px,calc(100vw-1.25rem))] sm:w-[min(1020px,calc(100vw-2rem))] ${
+          selectedIso ? 'hidden md:block' : ''
+        }`}
+      >
         <div className="flex justify-center mb-1.5">
           <button
             type="button"
             onClick={() => setDockCollapsed((v) => !v)}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#09122B]/94 border border-[#E8BD6C]/35 text-[11px] font-medium text-[#E8BD6C] hover:text-white hover:border-[#E8BD6C] transition-colors"
+            className="min-h-[40px] sm:min-h-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-3 sm:py-1 rounded-md bg-[#09122B]/94 border border-[#E8BD6C]/35 text-xs sm:text-[11px] font-medium text-[#E8BD6C] hover:text-white hover:border-[#E8BD6C] transition-colors shadow-lg"
             title="Raccourci clavier : H"
           >
             {dockCollapsed ? (
@@ -1977,23 +2006,23 @@ export function GlobeView({
         </div>
 
         {!dockCollapsed && (
-          <div className="rounded-xl bg-[#09122B]/95 border border-[#E8BD6C]/35 p-3 shadow-2xl space-y-2.5">
+          <div className="rounded-xl bg-[#09122B]/95 border border-[#E8BD6C]/35 p-3 shadow-2xl space-y-2.5 max-h-[52dvh] overflow-y-auto overscroll-contain">
             {/* Search & Globe Toggles Row */}
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="w-3.5 h-3.5 text-[#E8BD6C]/75 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2">
+              <div className="relative col-span-2 sm:flex-1 sm:min-w-[200px]">
+                <Search className="w-4 sm:w-3.5 h-4 sm:h-3.5 text-[#E8BD6C]/75 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="Rechercher un artiste, titre, label ou pays sur le globe…"
-                  className="w-full pl-8 pr-8 py-1.5 text-xs bg-[#0E1B3D] text-[#FAF3DF] placeholder:text-[#ECE8E1]/45 border border-white/15 rounded-md focus:outline-none focus:border-[#E8BD6C]"
+                  placeholder="Rechercher artiste, titre, pays…"
+                  className="w-full pl-9 sm:pl-8 pr-9 py-2 sm:py-1.5 min-h-[40px] sm:min-h-0 text-base sm:text-xs bg-[#0E1B3D] text-[#FAF3DF] placeholder:text-[#ECE8E1]/45 border border-white/15 rounded-md focus:outline-none focus:border-[#E8BD6C]"
                 />
                 {q && (
                   <button
                     type="button"
                     onClick={() => setQ('')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[#ECE8E1]/55 hover:text-white"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-[#ECE8E1]/55 hover:text-white"
                     aria-label="Effacer la recherche"
                   >
                     <X className="w-3.5 h-3.5" />
@@ -2005,7 +2034,7 @@ export function GlobeView({
                 value={yearFilter}
                 onChange={(e) => setYearFilter(e.target.value)}
                 aria-label="Filtrer par année"
-                className="px-2.5 py-1.5 text-xs bg-[#0E1B3D] text-[#FAF3DF] border border-white/15 rounded-md focus:outline-none focus:border-[#E8BD6C]"
+                className="col-span-2 sm:w-auto min-h-[40px] sm:min-h-0 px-2.5 py-2 sm:py-1.5 text-base sm:text-xs bg-[#0E1B3D] text-[#FAF3DF] border border-white/15 rounded-md focus:outline-none focus:border-[#E8BD6C]"
               >
                 <option value="">Toutes années</option>
                 {years.map((y) => (
@@ -2018,7 +2047,7 @@ export function GlobeView({
               <button
                 type="button"
                 onClick={() => setMultiOnly((v) => !v)}
-                className={`px-2.5 py-1.5 text-xs font-medium rounded-md border transition-colors whitespace-nowrap ${
+                className={`min-h-[40px] sm:min-h-0 px-2.5 py-1.5 text-xs font-medium rounded-md border transition-colors whitespace-nowrap inline-flex items-center justify-center ${
                   multiOnly
                     ? 'bg-[#276C9C] text-white border-[#9ECAC2]'
                     : 'bg-[#0E1B3D] text-[#ECE8E1]/80 border-white/15 hover:border-[#9ECAC2]/60'
@@ -2030,40 +2059,44 @@ export function GlobeView({
               <button
                 type="button"
                 onClick={() => setShowNetwork((v) => !v)}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border transition-colors whitespace-nowrap ${
+                className={`min-h-[40px] sm:min-h-0 inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border transition-colors whitespace-nowrap ${
                   showNetwork
                     ? 'bg-[#276C9C] text-white border-[#E8BD6C]'
                     : 'bg-[#0E1B3D] text-[#ECE8E1]/80 border-white/15 hover:border-[#E8BD6C]/60'
                 }`}
               >
-                <Network className="w-3 h-3 text-[#E8BD6C]" />
+                <Network className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-[#E8BD6C]" />
                 <span>Réseau</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowClouds((v) => !v)}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border transition-colors whitespace-nowrap ${
+                className={`min-h-[40px] sm:min-h-0 inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border transition-colors whitespace-nowrap ${
                   showClouds
                     ? 'bg-[#276C9C] text-white border-[#9ECAC2]'
                     : 'bg-[#0E1B3D] text-[#ECE8E1]/80 border-white/15 hover:border-[#9ECAC2]/60'
                 }`}
               >
-                <Cloud className="w-3 h-3 text-[#9ECAC2]" />
+                <Cloud className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-[#9ECAC2]" />
                 <span>Nuages</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setAutoRotate((v) => !v)}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border transition-colors whitespace-nowrap ${
+                className={`min-h-[40px] sm:min-h-0 inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border transition-colors whitespace-nowrap ${
                   autoRotate
                     ? 'bg-[#0E1B3D] text-[#9ECAC2] border-[#9ECAC2]/50'
                     : 'bg-[#0E1B3D] text-[#ECE8E1]/70 border-white/15'
                 }`}
                 title="Activer ou suspendre la rotation du globe"
               >
-                {autoRotate ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                {autoRotate ? (
+                  <Pause className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
+                ) : (
+                  <Play className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
+                )}
                 <span>Rotation</span>
               </button>
 
@@ -2075,9 +2108,9 @@ export function GlobeView({
                   setMultiOnly(false);
                   resetCamera();
                 }}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md bg-[#0E1B3D] text-[#ECE8E1]/85 border border-white/15 hover:border-[#E8BD6C] transition-colors whitespace-nowrap"
+                className="col-span-2 sm:col-span-1 min-h-[40px] sm:min-h-0 inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md bg-[#0E1B3D] text-[#ECE8E1]/85 border border-white/15 hover:border-[#E8BD6C] transition-colors whitespace-nowrap"
               >
-                <RotateCcw className="w-3 h-3" />
+                <RotateCcw className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
                 <span>Réinitialiser</span>
               </button>
             </div>
@@ -2095,7 +2128,7 @@ export function GlobeView({
                       key={c.isoId}
                       type="button"
                       onClick={() => focusCountry(c.isoId, c.lat, c.lng)}
-                      className={`px-2 py-1 rounded text-[11px] whitespace-nowrap shrink-0 border transition-colors ${
+                      className={`min-h-[36px] sm:min-h-0 px-2.5 py-1.5 sm:px-2 sm:py-1 rounded text-xs sm:text-[11px] whitespace-nowrap shrink-0 border transition-colors ${
                         isActive
                           ? 'bg-[#E8BD6C] text-[#09122B] border-[#E8BD6C] font-bold'
                           : 'bg-[#0E1B3D] text-[#ECE8E1]/90 border-white/12 hover:border-[#E8BD6C]/60'

@@ -8,7 +8,7 @@ export function LegalView({ onNavigate }: LegalViewProps) {
   return (
     <section className="space-y-6 max-w-4xl mx-auto">
       {/* Main Creator & Fan Project Statement */}
-      <article className="bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg p-6 sm:p-8 space-y-5">
+      <article className="bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg p-4 sm:p-8 space-y-5">
         <div className="flex items-start gap-3.5">
           <div className="w-10 h-10 rounded-lg bg-[#030925] text-[#9ECAC2] flex items-center justify-center shrink-0">
             <Heart className="w-5 h-5" />
@@ -23,7 +23,7 @@ export function LegalView({ onNavigate }: LegalViewProps) {
           </div>
         </div>
 
-        <div className="bg-[#ECE8E1]/65 border-l-4 border-[#144980] rounded-r-md px-5 py-4 space-y-3 text-sm sm:text-base text-[#030925] leading-relaxed">
+        <div className="bg-[#ECE8E1]/65 border border-[#144980]/25 rounded-lg px-4 sm:px-5 py-4 space-y-3 text-sm sm:text-base text-[#030925] leading-relaxed">
           <p>
             Ce site a été conçu et développé par{' '}
             <strong className="font-bold text-[#030925]">Fred Neau / un ecologeek</strong>, en pur
@@ -39,7 +39,7 @@ export function LegalView({ onNavigate }: LegalViewProps) {
               href="https://laplanetebleue.com/fr/emissions"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-md bg-white text-[#144980] border border-[#DDD8D0] hover:border-[#144980] transition-colors"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[44px] text-xs font-semibold rounded-md bg-white text-[#144980] border border-[#DDD8D0] hover:border-[#144980] transition-colors"
             >
               <Radio className="w-3.5 h-3.5" />
               <span>Site officiel de La Planète Bleue</span>
@@ -48,8 +48,8 @@ export function LegalView({ onNavigate }: LegalViewProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
-          <div className="bg-white border border-[#DDD8D0] rounded-lg p-5 space-y-2.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 pt-2">
+          <div className="bg-white border border-[#DDD8D0] rounded-lg p-4 sm:p-5 space-y-2.5">
             <div className="flex items-center gap-2 text-[#144980]">
               <Radio className="w-4 h-4 shrink-0" />
               <h3 className="font-display text-sm font-bold uppercase tracking-wider text-[#030925]">
@@ -73,7 +73,7 @@ export function LegalView({ onNavigate }: LegalViewProps) {
             </p>
           </div>
 
-          <div className="bg-white border border-[#DDD8D0] rounded-lg p-5 space-y-2.5">
+          <div className="bg-white border border-[#DDD8D0] rounded-lg p-4 sm:p-5 space-y-2.5">
             <div className="flex items-center gap-2 text-[#144980]">
               <Music className="w-4 h-4 shrink-0" />
               <h3 className="font-display text-sm font-bold uppercase tracking-wider text-[#030925]">
@@ -89,7 +89,7 @@ export function LegalView({ onNavigate }: LegalViewProps) {
             </p>
           </div>
 
-          <div className="bg-white border border-[#DDD8D0] rounded-lg p-5 space-y-2.5">
+          <div className="bg-white border border-[#DDD8D0] rounded-lg p-4 sm:p-5 space-y-2.5">
             <div className="flex items-center gap-2 text-[#144980]">
               <ShieldCheck className="w-4 h-4 shrink-0" />
               <h3 className="font-display text-sm font-bold uppercase tracking-wider text-[#030925]">
@@ -103,7 +103,7 @@ export function LegalView({ onNavigate }: LegalViewProps) {
             </p>
           </div>
 
-          <div className="bg-white border border-[#DDD8D0] rounded-lg p-5 space-y-3">
+          <div className="bg-white border border-[#DDD8D0] rounded-lg p-4 sm:p-5 space-y-3">
             <div className="flex items-center gap-2 text-[#144980]">
               <User className="w-4 h-4 shrink-0" />
               <h3 className="font-display text-sm font-bold uppercase tracking-wider text-[#030925]">
@@ -119,7 +119,7 @@ export function LegalView({ onNavigate }: LegalViewProps) {
                 href="https://www.linkedin.com/in/fredneau/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-md bg-[#030925] text-[#FAF8F5] hover:bg-[#144980] transition-colors"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[44px] text-xs font-semibold rounded-md bg-[#030925] text-[#FAF8F5] hover:bg-[#144980] transition-colors"
               >
                 <User className="w-3.5 h-3.5 text-[#9ECAC2]" />
                 <span>Profil LinkedIn de Fred Neau</span>
@@ -129,25 +129,25 @@ export function LegalView({ onNavigate }: LegalViewProps) {
           </div>
         </div>
 
-        <div className="pt-3 border-t border-[#DDD8D0] flex flex-wrap items-center gap-3">
+        <div className="pt-3 border-t border-[#DDD8D0] flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3">
           <button
             type="button"
             onClick={() => onNavigate('tracks')}
-            className="px-4 py-2 text-xs font-semibold rounded-md bg-[#030925] text-[#FAF8F5] hover:bg-[#144980] transition-colors"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] text-xs font-semibold rounded-md bg-[#030925] text-[#FAF8F5] hover:bg-[#144980] transition-colors"
           >
             Explorer la base des titres
           </button>
           <button
             type="button"
             onClick={() => onNavigate('stats')}
-            className="px-4 py-2 text-xs font-semibold rounded-md bg-white text-[#030925] border border-[#DDD8D0] hover:border-[#144980] transition-colors"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] text-xs font-semibold rounded-md bg-white text-[#030925] border border-[#DDD8D0] hover:border-[#144980] transition-colors"
           >
             Voir les statistiques
           </button>
           <button
             type="button"
             onClick={() => onNavigate('globe')}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-md bg-white text-[#144980] border border-[#DDD8D0] hover:border-[#144980] transition-colors"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 min-h-[44px] text-xs font-semibold rounded-md bg-white text-[#144980] border border-[#DDD8D0] hover:border-[#144980] transition-colors"
           >
             <Globe className="w-3.5 h-3.5" />
             <span>Ouvrir la Vue 3D</span>
