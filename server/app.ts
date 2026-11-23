@@ -281,7 +281,12 @@ export function createApp() {
       const data = listEmissions({ q, year, page, limit });
       res.json({
         ...data,
-        items: data.items.map(({ cover_url: _omit, ...rest }) => ({ ...rest, cover_url: null })),
+        items: data.items.map(({ cover_url: _omitCover, audio_url, ...rest }) => ({
+          ...rest,
+          cover_url: null,
+          audio_url: null,
+          has_audio: Boolean(audio_url),
+        })),
       });
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
@@ -295,10 +300,15 @@ export function createApp() {
         res.status(404).json({ error: 'Émission introuvable' });
         return;
       }
-      const { cover_url: _omit, ...restEmission } = detail.emission;
+      const { cover_url: _omitCover, audio_url, ...restEmission } = detail.emission;
       res.json({
         ...detail,
-        emission: { ...restEmission, cover_url: null },
+        emission: {
+          ...restEmission,
+          cover_url: null,
+          audio_url: null,
+          has_audio: Boolean(audio_url),
+        },
       });
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });

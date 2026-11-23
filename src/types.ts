@@ -39,6 +39,7 @@ export interface EmissionRecord {
   description: string | null;
   cover_url: string | null;
   audio_url: string | null;
+  has_audio?: boolean;
   duration_sec: number | null;
   url: string;
   track_count: number;

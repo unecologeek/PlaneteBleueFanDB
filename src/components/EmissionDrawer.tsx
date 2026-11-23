@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ExternalLink, Loader2, Pause, Play, Search, X } from 'lucide-react';
+import { ExternalLink, Loader2, Pause, Play, Radio, Search, X } from 'lucide-react';
 import { useI18n } from '../i18n';
 import { formatDuration } from '../types';
 import type { EmissionDetailResponse } from '../types';
@@ -218,41 +218,37 @@ export function EmissionDrawer({
                     </p>
                   )}
 
-                  <div className="pt-1 flex flex-wrap items-center gap-4">
-                    <a
-                      href={data.emission.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#144980] hover:underline whitespace-nowrap"
-                    >
-                      <span>{t.drawer.officialSheet}</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
+                  <div className="pt-1">
+                    {(() => {
+                      const hasAudioOnOfficial = Boolean(
+                        data.emission.has_audio ?? data.emission.audio_url
+                      );
+                      return (
+                        <a
+                          href={data.emission.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`inline-flex items-center gap-2 px-3.5 py-2 min-h-[40px] rounded-md text-xs font-semibold transition-colors ${
+                            hasAudioOnOfficial
+                              ? 'bg-[#144980] text-[#FAF8F5] hover:bg-[#030925]'
+                              : 'bg-white text-[#144980] border border-[#DDD8D0] hover:border-[#144980]'
+                          }`}
+                        >
+                          {hasAudioOnOfficial && (
+                            <Radio className="w-3.5 h-3.5 text-[#9ECAC2] shrink-0" />
+                          )}
+                          <span>
+                            {hasAudioOnOfficial
+                              ? t.drawer.listenOfficialSite
+                              : t.drawer.viewOfficialSheet}
+                          </span>
+                          <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                        </a>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
-
-              {data.emission.audio_url && (
-                <div className="border border-[#DDD8D0] rounded-lg p-4 bg-[#FAF8F5] space-y-2">
-                  <div className="flex items-center justify-between text-xs text-[#030925]/75">
-                    <span className="font-semibold text-[#030925]">{t.drawer.listenPodcast}</span>
-                    <a
-                      href={data.emission.audio_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[#144980] font-semibold hover:underline whitespace-nowrap"
-                    >
-                      {t.drawer.mp3File}
-                    </a>
-                  </div>
-                  <audio
-                    controls
-                    preload="none"
-                    src={data.emission.audio_url}
-                    className="w-full h-10"
-                  />
-                </div>
-              )}
 
               {/* Iconic Dark Playlist Box inspired by laplanetebleue.com */}
               <div className="space-y-4">
