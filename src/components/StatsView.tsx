@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Clock, RefreshCw, Search } from 'lucide-react';
-import { formatDuration, formatNumberFR } from '../types';
+import { useI18n } from '../i18n';
+import { formatDuration } from '../types';
 import type { ArchiveStats } from '../types';
 import { InfiniteSentinel } from './InfiniteSentinel';
 
@@ -49,6 +50,7 @@ export function StatsView({
   onFilterByTrack,
   onEnrichBatch,
 }: StatsViewProps) {
+  const { t, formatNum } = useI18n();
   const durationPct =
     stats.tracks_count > 0
       ? Math.round((stats.tracks_with_duration / stats.tracks_count) * 100)
@@ -81,10 +83,10 @@ export function StatsView({
   );
 
   useEffect(() => {
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       loadAuthors(0, true);
     }, 180);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [loadAuthors]);
 
   // 2. Countries infinite ranking
@@ -114,10 +116,10 @@ export function StatsView({
   );
 
   useEffect(() => {
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       loadCountries(0, true);
     }, 180);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [loadCountries]);
 
   // 3. Top Tracks infinite ranking
@@ -176,16 +178,14 @@ export function StatsView({
       <div className="bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg p-4 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <h3 className="font-display text-base font-semibold text-[#030925]">
-            Couverture des durées musicales
+            {t.statsView.coverageTitle}
           </h3>
           <p className="text-sm text-[#030925]/75">
-            Les playlists d’origine ne précisent pas la durée individuelle des morceaux.
-            L’enrichissement interroge Deezer et iTunes pour associer la durée exacte de chaque
-            titre.
+            {t.statsView.coverageDesc}
           </p>
           <p className="text-xs font-mono tabular-nums text-[#144980] pt-1">
-            {formatNumberFR(stats.tracks_with_duration)} / {formatNumberFR(stats.tracks_count)}{' '}
-            titres renseignés ({durationPct}%)
+            {formatNum(stats.tracks_with_duration)} / {formatNum(stats.tracks_count)}{' '}
+            {t.statsView.coverageCountSuffix} ({durationPct}%)
           </p>
         </div>
 
@@ -200,35 +200,35 @@ export function StatsView({
           ) : (
             <Clock className="w-3.5 h-3.5" />
           )}
-          <span>Enrichir 250 durées</span>
+          <span>{t.statsView.enrichBtn}</span>
         </button>
       </div>
 
       {/* Mobile quick-jump bar (non-sticky) */}
-      <div className="lg:hidden grid grid-cols-4 gap-1.5" aria-label="Accès rapide aux classements">
+      <div className="lg:hidden grid grid-cols-4 gap-1.5" aria-label={t.statsView.quickJumpAria}>
         <a
           href="#stats-authors"
           className="min-h-[40px] flex items-center justify-center px-2 py-1.5 rounded-md bg-[#FAF8F5] border border-[#DDD8D0] text-xs font-display font-semibold text-[#030925] hover:border-[#144980] text-center"
         >
-          Auteurs
+          {t.statsView.jumpAuthors}
         </a>
         <a
           href="#stats-top-tracks"
           className="min-h-[40px] flex items-center justify-center px-2 py-1.5 rounded-md bg-[#FAF8F5] border border-[#DDD8D0] text-xs font-display font-semibold text-[#030925] hover:border-[#144980] text-center"
         >
-          Titres
+          {t.statsView.jumpTracks}
         </a>
         <a
           href="#stats-countries"
           className="min-h-[40px] flex items-center justify-center px-2 py-1.5 rounded-md bg-[#FAF8F5] border border-[#DDD8D0] text-xs font-display font-semibold text-[#030925] hover:border-[#144980] text-center"
         >
-          Pays
+          {t.statsView.jumpCountries}
         </a>
         <a
           href="#stats-years"
           className="min-h-[40px] flex items-center justify-center px-2 py-1.5 rounded-md bg-[#FAF8F5] border border-[#DDD8D0] text-xs font-display font-semibold text-[#030925] hover:border-[#144980] text-center"
         >
-          Années
+          {t.statsView.jumpYears}
         </a>
       </div>
 
@@ -242,10 +242,10 @@ export function StatsView({
           <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[#DDD8D0] bg-[#ECE8E1]/50 space-y-2.5">
             <div className="flex items-baseline justify-between gap-3">
               <h3 className="font-display text-base font-semibold text-[#030925]">
-                Classement des auteurs
+                {t.statsView.authorsTitle}
               </h3>
               <span className="text-xs font-mono tabular-nums text-[#030925]/65">
-                {formatNumberFR(authors.length)} / {formatNumberFR(authorsTotal)}
+                {formatNum(authors.length)} / {formatNum(authorsTotal)}
               </span>
             </div>
             <div className="relative">
@@ -254,7 +254,7 @@ export function StatsView({
                 type="text"
                 value={authorQuery}
                 onChange={(e) => setAuthorQuery(e.target.value)}
-                placeholder="Filtrer dans le classement des auteurs…"
+                placeholder={t.statsView.authorsPlaceholder}
                 className="w-full pl-9 sm:pl-8 pr-3 py-2 sm:py-1.5 text-base sm:text-xs bg-white border border-[#DDD8D0] rounded-md focus:outline-none focus:border-[#144980]"
               />
             </div>
@@ -278,7 +278,8 @@ export function StatsView({
                   <span className="text-sm font-semibold text-[#030925] truncate">{a.author}</span>
                 </div>
                 <span className="text-xs font-mono tabular-nums text-[#030925]/70 shrink-0">
-                  {a.play_count} diff. · {a.emission_count} ém.
+                  {formatNum(a.play_count)} {t.statsView.playsAbbr} · {formatNum(a.emission_count)}{' '}
+                  {t.statsView.emissionsAbbr}
                 </span>
               </button>
             ))}
@@ -302,14 +303,14 @@ export function StatsView({
           <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[#DDD8D0] bg-[#ECE8E1]/50 flex items-baseline justify-between gap-3">
             <div>
               <h3 className="font-display text-base font-semibold text-[#030925]">
-                Titres les plus diffusés
+                {t.statsView.topTracksTitle}
               </h3>
               <p className="text-xs text-[#030925]/65 mt-0.5">
-                Morceaux programmés à plusieurs reprises
+                {t.statsView.topTracksSub}
               </p>
             </div>
             <span className="text-xs font-mono tabular-nums text-[#030925]/65 shrink-0">
-              {formatNumberFR(topTracks.length)} / {formatNumberFR(topTracksTotal)}
+              {formatNum(topTracks.length)} / {formatNum(topTracksTotal)}
             </span>
           </div>
 
@@ -317,11 +318,11 @@ export function StatsView({
             ref={topTracksScrollRef}
             className="h-[340px] sm:h-[468px] overflow-y-auto overscroll-contain px-4 sm:px-5 divide-y divide-[#DDD8D0]/60"
           >
-            {topTracks.map((t, idx) => (
+            {topTracks.map((item, idx) => (
               <button
-                key={t.id}
+                key={item.id}
                 type="button"
-                onClick={() => onFilterByTrack(`${t.author} ${t.title}`)}
+                onClick={() => onFilterByTrack(`${item.author} ${item.title}`)}
                 className="w-full min-h-[44px] py-2.5 flex items-start justify-between gap-3 text-left hover:bg-[#ECE8E1]/60 px-2 -mx-2 rounded transition-colors"
               >
                 <div className="flex items-baseline gap-2.5 min-w-0">
@@ -329,20 +330,20 @@ export function StatsView({
                     {String(idx + 1).padStart(2, '0')}
                   </span>
                   <div className="min-w-0">
-                    <div className="text-sm font-semibold text-[#030925] truncate">{t.title}</div>
+                    <div className="text-sm font-semibold text-[#030925] truncate">{item.title}</div>
                     <div className="text-xs text-[#030925]/65 truncate">
-                      {t.author}
-                      {t.country ? ` · ${t.country}` : ''}
+                      {item.author}
+                      {item.country ? ` · ${item.country}` : ''}
                     </div>
                   </div>
                 </div>
                 <div className="text-right shrink-0">
                   <div className="text-xs font-mono tabular-nums font-medium text-[#144980]">
-                    {t.emission_count} ém.
+                    {formatNum(item.emission_count)} {t.statsView.emissionsAbbr}
                   </div>
-                  {t.duration_sec && (
+                  {item.duration_sec && (
                     <div className="text-[11px] font-mono tabular-nums text-[#030925]/55">
-                      {formatDuration(t.duration_sec)}
+                      {formatDuration(item.duration_sec)}
                     </div>
                   )}
                 </div>
@@ -368,10 +369,10 @@ export function StatsView({
           <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[#DDD8D0] bg-[#ECE8E1]/50 space-y-2.5">
             <div className="flex items-baseline justify-between gap-3">
               <h3 className="font-display text-base font-semibold text-[#030925]">
-                Origines géographiques
+                {t.statsView.countriesTitle}
               </h3>
               <span className="text-xs font-mono tabular-nums text-[#030925]/65">
-                {formatNumberFR(countries.length)} / {formatNumberFR(countriesTotal)}
+                {formatNum(countries.length)} / {formatNum(countriesTotal)}
               </span>
             </div>
             <div className="relative">
@@ -380,7 +381,7 @@ export function StatsView({
                 type="text"
                 value={countryQuery}
                 onChange={(e) => setCountryQuery(e.target.value)}
-                placeholder="Filtrer par pays ou ville…"
+                placeholder={t.statsView.countriesPlaceholder}
                 className="w-full pl-9 sm:pl-8 pr-3 py-2 sm:py-1.5 text-base sm:text-xs bg-white border border-[#DDD8D0] rounded-md focus:outline-none focus:border-[#144980]"
               />
             </div>
@@ -404,7 +405,7 @@ export function StatsView({
                   <span className="text-sm font-semibold text-[#030925] truncate">{c.country}</span>
                 </div>
                 <span className="text-xs font-mono tabular-nums text-[#030925]/70 shrink-0">
-                  {formatNumberFR(c.count)} titres
+                  {formatNum(c.count)} {t.statsView.tracksUnit}
                 </span>
               </button>
             ))}
@@ -428,14 +429,14 @@ export function StatsView({
           <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[#DDD8D0] bg-[#ECE8E1]/50 flex items-baseline justify-between gap-3">
             <div>
               <h3 className="font-display text-base font-semibold text-[#030925]">
-                Émissions par année
+                {t.statsView.yearsTitle}
               </h3>
               <p className="text-xs text-[#030925]/65 mt-0.5">
-                Volume annuel d’émissions et de titres programmés
+                {t.statsView.yearsSub}
               </p>
             </div>
             <span className="text-xs font-mono tabular-nums text-[#030925]/65 shrink-0">
-              {yearsList.length} / {yearsTotal}
+              {formatNum(yearsList.length)} / {formatNum(yearsTotal)}
             </span>
           </div>
 
@@ -462,7 +463,8 @@ export function StatsView({
                     />
                   </div>
                   <span className="text-[11px] sm:text-xs font-mono tabular-nums text-[#030925]/75 w-24 sm:w-28 text-right shrink-0">
-                    {y.count} ém. · {formatNumberFR(y.track_plays)} t.
+                    {formatNum(y.count)} {t.statsView.emissionsAbbr} · {formatNum(y.track_plays)}{' '}
+                    {t.statsView.tracksAbbr}
                   </span>
                 </button>
               );

@@ -23,8 +23,9 @@ import {
   buildGreatCircleNetworkTubeGeometry,
   latLngToVec3,
 } from '../three/globeGeometry';
+import { useI18n } from '../i18n';
 import { createMoebiusTextures, sampleTopographicHeight } from '../three/moebiusTextures';
-import { formatDuration, formatNumberFR } from '../types';
+import { formatDuration } from '../types';
 import type { GlobeArc, GlobeCountryBucket, GlobeResponse } from '../types';
 
 interface GlobeViewProps {
@@ -203,6 +204,11 @@ export function GlobeView({
   onSelectEmission,
   onInspectCountryInTable,
 }: GlobeViewProps) {
+  const { lang, t, formatNum } = useI18n();
+  const tRef = useRef(t);
+  tRef.current = t;
+  const numPrefix = lang === 'en' ? '#' : 'nº ';
+
   // Filter state
   const [q, setQ] = useState('');
   const [yearFilter, setYearFilter] = useState('');
@@ -291,7 +297,7 @@ export function GlobeView({
         if (multiOnly) params.set('multiOnly', 'true');
 
         const res = await fetch(`/api/globe?${params.toString()}`);
-        if (!res.ok) throw new Error('Erreur lors du chargement des données géographiques.');
+        if (!res.ok) throw new Error(tRef.current.globeView.loadError);
         const data = (await res.json()) as GlobeResponse;
         if (seq !== requestSeqRef.current) return;
 
@@ -1635,7 +1641,7 @@ export function GlobeView({
                   slot.isSelected ? 'text-[#EA6D4E]' : 'text-[#E8BD6C]'
                 }`}
               >
-                {formatNumberFR(slot.trackCount)}
+                {formatNum(slot.trackCount)}
               </span>
             )}
           </button>
@@ -1647,8 +1653,8 @@ export function GlobeView({
         <div className="pointer-events-auto inline-flex flex-wrap items-center gap-x-2.5 sm:gap-x-4 gap-y-1 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg bg-[#09122B]/94 border border-[#E8BD6C]/35 text-[11px] sm:text-xs text-[#FAF3DF]">
           <div className="flex items-center gap-1.5 font-display font-bold tracking-wide text-[#E8BD6C]">
             <Compass className="w-3.5 h-3.5 shrink-0" />
-            <span>Globe Sonore</span>
-            <span className="hidden sm:inline">· Ligne Claire</span>
+            <span>{t.globeView.hudTitle}</span>
+            <span className="hidden sm:inline">{t.globeView.hudSubtitle}</span>
           </div>
           <span className="text-white/20 hidden sm:inline" aria-hidden="true">
             |
@@ -1656,27 +1662,27 @@ export function GlobeView({
           {loading && !globeData ? (
             <span className="inline-flex items-center gap-1.5 text-[#ECE8E1]/75">
               <Loader2 className="w-3 h-3 animate-spin text-[#9ECAC2]" />
-              Chargement…
+              {t.globeView.loading}
             </span>
           ) : globeData ? (
             <div className="flex flex-wrap items-center gap-x-2.5 sm:gap-x-3 gap-y-0.5 font-mono tabular-nums">
               <span>
-                <strong className="text-white">{formatNumberFR(globeData.matchedTracksCount)}</strong>{' '}
-                <span className="text-[#ECE8E1]/70">titres</span>
+                <strong className="text-white">{formatNum(globeData.matchedTracksCount)}</strong>{' '}
+                <span className="text-[#ECE8E1]/70">{t.globeView.tracksUnit}</span>
               </span>
               <span className="text-white/20">·</span>
               <span>
                 <strong className="text-[#6ED6C3]">
-                  {formatNumberFR(globeData.matchedCountriesCount)}
+                  {formatNum(globeData.matchedCountriesCount)}
                 </strong>{' '}
-                <span className="text-[#ECE8E1]/70">pays</span>
+                <span className="text-[#ECE8E1]/70">{t.globeView.countriesUnit}</span>
               </span>
               {showNetwork && globeData.arcs.length > 0 && (
                 <>
                   <span className="text-white/20">·</span>
                   <span>
-                    <strong className="text-[#E8BD6C]">{globeData.arcs.length}</strong>{' '}
-                    <span className="text-[#ECE8E1]/70">liens</span>
+                    <strong className="text-[#E8BD6C]">{formatNum(globeData.arcs.length)}</strong>{' '}
+                    <span className="text-[#ECE8E1]/70">{t.globeView.linksUnit}</span>
                   </span>
                 </>
               )}
@@ -1689,7 +1695,7 @@ export function GlobeView({
         {globeData && (
           <div className="hidden sm:inline-flex flex-wrap items-center gap-3 px-3 py-1.5 rounded-md bg-[#09122B]/90 border border-white/15 text-[11px] text-[#ECE8E1]/85 w-fit">
             <div className="flex items-center gap-1.5">
-              <span>Relief</span>
+              <span>{t.globeView.relief}</span>
               <span className="font-mono text-[#6ED6C3]">1</span>
               <div
                 className="w-20 h-2 rounded-sm border border-[#09122B]"
@@ -1698,7 +1704,7 @@ export function GlobeView({
                 }}
                 aria-hidden="true"
               />
-              <span className="font-mono text-[#EA6D4E]">{formatNumberFR(maxCountryTracks)}</span>
+              <span className="font-mono text-[#EA6D4E]">{formatNum(maxCountryTracks)}</span>
             </div>
             {showNetwork && (
               <>
@@ -1708,11 +1714,11 @@ export function GlobeView({
                 <div className="flex items-center gap-2.5">
                   <span className="inline-flex items-center gap-1">
                     <span className="w-2.5 h-1 rounded-full bg-[#73DCD0]" />
-                    <span>Même émission</span>
+                    <span>{t.globeView.sameBroadcast}</span>
                   </span>
                   <span className="inline-flex items-center gap-1">
                     <span className="w-2.5 h-1 rounded-full bg-[#F5CE74]" />
-                    <span>5+ émissions</span>
+                    <span>{t.globeView.fivePlusBroadcasts}</span>
                   </span>
                 </div>
               </>
@@ -1734,20 +1740,25 @@ export function GlobeView({
           {hoveredInfo.trackCount > 0 ? (
             <>
               <div className="mt-1 font-mono tabular-nums text-[#E8BD6C]">
-                {formatNumberFR(hoveredInfo.trackCount)} titre
-                {hoveredInfo.trackCount > 1 ? 's' : ''} · {formatNumberFR(hoveredInfo.playCount)}{' '}
-                diffusion{hoveredInfo.playCount > 1 ? 's' : ''}
+                {formatNum(hoveredInfo.trackCount)}{' '}
+                {hoveredInfo.trackCount > 1
+                  ? t.globeView.trackPlural
+                  : t.globeView.trackSingular}{' '}
+                · {formatNum(hoveredInfo.playCount)}{' '}
+                {hoveredInfo.playCount > 1
+                  ? t.globeView.playPlural
+                  : t.globeView.playSingular}
               </div>
               {hoveredInfo.topAuthors.length > 0 && (
                 <div className="mt-1 text-[11px] text-[#9ECAC2] line-clamp-2">
                   {hoveredInfo.topAuthors.join(', ')}
                 </div>
               )}
-              <div className="mt-1 text-[10px] text-[#ECE8E1]/55">Cliquer pour inspecter</div>
+              <div className="mt-1 text-[10px] text-[#ECE8E1]/55">{t.globeView.clickToInspect}</div>
             </>
           ) : (
             <div className="mt-0.5 text-[11px] text-[#ECE8E1]/60">
-              Aucun titre indexé pour cette sélection
+              {t.globeView.noMatchCountry}
             </div>
           )}
         </div>
@@ -1766,26 +1777,28 @@ export function GlobeView({
             {hoveredNetworkInfo.fromName} ↔ {hoveredNetworkInfo.toName}
           </div>
           <div className="mt-1 font-mono tabular-nums text-[#73DCD0]">
-            {formatNumberFR(hoveredNetworkInfo.weight)} émission
-            {hoveredNetworkInfo.weight > 1 ? 's' : ''} en commun
+            {formatNum(hoveredNetworkInfo.weight)}{' '}
+            {hoveredNetworkInfo.weight > 1
+              ? t.globeView.sharedBroadcastPlural
+              : t.globeView.sharedBroadcastSingular}
           </div>
           {hoveredNetworkInfo.emissions.length > 0 && (
             <div className="mt-1.5 text-[11px] text-[#E8BD6C] font-mono leading-snug">
               {hoveredNetworkInfo.emissions
                 .slice(0, 6)
-                .map((em) => `nº ${em.number ?? em.slug}`)
+                .map((em) => `${numPrefix}${em.number ?? em.slug}`)
                 .join(', ')}
               {hoveredNetworkInfo.weight > 6 && (
                 <span className="text-[#ECE8E1]/65">
                   {' '}
-                  (+{formatNumberFR(hoveredNetworkInfo.weight - 6)})
+                  (+{formatNum(hoveredNetworkInfo.weight - 6)})
                 </span>
               )}
             </div>
           )}
           {hoveredNetworkInfo.emissions[0] && (
             <div className="mt-1 text-[10px] text-[#ECE8E1]/60">
-              Cliquer pour ouvrir l’émission nº{' '}
+              {t.globeView.clickToOpenBroadcast}
               {hoveredNetworkInfo.emissions[0].number ?? hoveredNetworkInfo.emissions[0].slug}
             </div>
           )}
@@ -1802,21 +1815,25 @@ export function GlobeView({
           <div className="px-4 py-3 border-b border-white/10 flex items-start justify-between gap-3 bg-[#0E1B3D]">
             <div className="min-w-0">
               <div className="text-[11px] uppercase tracking-wider font-display text-[#E8BD6C]">
-                Pays sélectionné
+                {t.globeView.selectedCountry}
               </div>
               <h2 className="font-display text-lg font-bold text-white truncate">
                 {selectedBucket?.nameFr || selectedCatalogMeta?.nameFr || selectedIso}
               </h2>
               {selectedBucket ? (
                 <div className="text-xs font-mono tabular-nums text-[#6ED6C3] mt-0.5">
-                  {formatNumberFR(selectedBucket.trackCount)} titre
-                  {selectedBucket.trackCount > 1 ? 's' : ''} ·{' '}
-                  {formatNumberFR(selectedBucket.playCount)} passage
-                  {selectedBucket.playCount > 1 ? 's' : ''}
+                  {formatNum(selectedBucket.trackCount)}{' '}
+                  {selectedBucket.trackCount > 1
+                    ? t.globeView.trackPlural
+                    : t.globeView.trackSingular}{' '}
+                  · {formatNum(selectedBucket.playCount)}{' '}
+                  {selectedBucket.playCount > 1
+                    ? t.globeView.passagePlural
+                    : t.globeView.passageSingular}
                 </div>
               ) : (
                 <div className="text-xs text-[#ECE8E1]/65 mt-0.5">
-                  Aucun titre correspondant aux filtres actifs
+                  {t.globeView.noMatchFilters}
                 </div>
               )}
             </div>
@@ -1824,7 +1841,7 @@ export function GlobeView({
               type="button"
               onClick={() => setSelectedIso(null)}
               className="w-10 h-10 flex items-center justify-center rounded-md text-[#ECE8E1]/75 hover:text-white hover:bg-white/10 transition-colors shrink-0"
-              aria-label="Fermer la fiche pays"
+              aria-label={t.globeView.closeCountryAria}
             >
               <X className="w-4 h-4" />
             </button>
@@ -1835,7 +1852,9 @@ export function GlobeView({
               <div className="flex-1 overflow-y-auto overscroll-contain divide-y divide-white/10">
                 {selectedBucket.topAuthors.length > 0 && (
                   <div className="px-4 py-2.5 bg-[#0A1533]">
-                    <div className="text-[11px] text-[#ECE8E1]/60 mb-1">Artistes principaux</div>
+                    <div className="text-[11px] text-[#ECE8E1]/60 mb-1">
+                      {t.globeView.topAuthors}
+                    </div>
                     <div className="text-xs text-[#9ECAC2] font-medium leading-relaxed">
                       {selectedBucket.topAuthors.join(' · ')}
                     </div>
@@ -1845,7 +1864,7 @@ export function GlobeView({
                 {selectedConnections.length > 0 && (
                   <div className="px-4 py-2.5 bg-[#0A1533]">
                     <div className="text-[11px] text-[#ECE8E1]/60 mb-1.5">
-                      Pays reliés par les mêmes émissions ({selectedConnections.length})
+                      {t.globeView.connectedCountries} ({formatNum(selectedConnections.length)})
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {selectedConnections.map((conn) => (
@@ -1855,9 +1874,9 @@ export function GlobeView({
                           onClick={() => focusCountry(conn.isoId, conn.lat, conn.lng)}
                           title={
                             conn.emissions.length > 0
-                              ? `Émissions : ${conn.emissions
+                              ? `${t.globeView.emissionsTooltipPrefix} ${conn.emissions
                                   .slice(0, 5)
-                                  .map((e) => `nº ${e.number ?? e.slug}`)
+                                  .map((e) => `${numPrefix}${e.number ?? e.slug}`)
                                   .join(', ')}`
                               : undefined
                           }
@@ -1870,7 +1889,8 @@ export function GlobeView({
                           <span>{conn.nameFr}</span>
                           {conn.emissions[0] && (
                             <span className="ml-1 font-mono text-[10px] text-[#E8BD6C]">
-                              nº {conn.emissions[0].number ?? conn.emissions[0].slug}
+                              {numPrefix}
+                              {conn.emissions[0].number ?? conn.emissions[0].slug}
                             </span>
                           )}
                         </button>
@@ -1879,28 +1899,28 @@ export function GlobeView({
                   </div>
                 )}
 
-                {selectedBucket.sampleTracks.map((t) => {
-                  const isPlaying = playingPreviewTrackId === t.id;
-                  const isLoadingPreview = loadingPreviewTrackId === t.id;
-                  const isUnavailable = unavailablePreviewTrackId === t.id;
+                {selectedBucket.sampleTracks.map((tr) => {
+                  const isPlaying = playingPreviewTrackId === tr.id;
+                  const isLoadingPreview = loadingPreviewTrackId === tr.id;
+                  const isUnavailable = unavailablePreviewTrackId === tr.id;
 
                   return (
-                    <div key={t.id} className="px-4 py-2.5 hover:bg-white/5 transition-colors">
+                    <div key={tr.id} className="px-4 py-2.5 hover:bg-white/5 transition-colors">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-start gap-2.5 min-w-0">
                           <button
                             type="button"
-                            onClick={() => togglePreview(t.id)}
+                            onClick={() => togglePreview(tr.id)}
                             disabled={isLoadingPreview}
                             className={`w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-md border transition-colors shrink-0 ${
                               isPlaying
                                 ? 'bg-[#E8BD6C] text-[#09122B] border-[#E8BD6C]'
-                                : t.preview_url
+                                : tr.preview_url
                                   ? 'bg-[#0E1B3D] text-[#E8BD6C] border-[#E8BD6C]/50 hover:bg-[#E8BD6C]/20'
                                   : 'bg-[#0E1B3D] text-[#9ECAC2] border-white/15 hover:border-[#9ECAC2]'
                             }`}
-                            title="Écouter un extrait musical (30s)"
-                            aria-label={`Écouter un extrait de ${t.title}`}
+                            title={t.globeView.playSampleTitle}
+                            aria-label={`${t.globeView.playSampleAriaPrefix} ${tr.title}`}
                           >
                             {isLoadingPreview ? (
                               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1912,31 +1932,32 @@ export function GlobeView({
                           </button>
                           <div className="min-w-0">
                             <div className="text-xs font-bold text-white leading-snug break-words">
-                              {t.title}
+                              {tr.title}
                             </div>
-                            <div className="text-[11px] text-[#9ECAC2] truncate">{t.author}</div>
+                            <div className="text-[11px] text-[#9ECAC2] truncate">{tr.author}</div>
                             {isUnavailable && (
                               <div className="text-[10px] text-[#EA6D4E] mt-0.5">
-                                Extrait audio indisponible
+                                {t.globeView.sampleUnavailable}
                               </div>
                             )}
                           </div>
                         </div>
                         <span className="text-[11px] font-mono tabular-nums text-[#ECE8E1]/70 shrink-0 pt-0.5">
-                          {formatDuration(t.duration_sec)}
+                          {formatDuration(tr.duration_sec)}
                         </span>
                       </div>
                       <div className="mt-1.5 pl-11 flex items-center justify-between gap-2 text-[11px]">
                         <button
                           type="button"
-                          onClick={() => onSelectEmission(t.emission_slug)}
+                          onClick={() => onSelectEmission(tr.emission_slug)}
                           className="font-mono tabular-nums text-[#E8BD6C] hover:underline py-0.5"
                         >
-                          Émission nº {t.emission_number ?? t.emission_slug}
-                          {t.broadcast_date_label ? ` · ${t.broadcast_date_label}` : ''}
+                          {t.globeView.emissionPrefix}
+                          {tr.emission_number ?? tr.emission_slug}
+                          {tr.broadcast_date_label ? ` · ${tr.broadcast_date_label}` : ''}
                         </button>
-                        {t.appearance_count > 1 && (
-                          <span className="font-mono text-[#9ECAC2]">{t.appearance_count}×</span>
+                        {tr.appearance_count > 1 && (
+                          <span className="font-mono text-[#9ECAC2]">{tr.appearance_count}×</span>
                         )}
                       </div>
                     </div>
@@ -1950,7 +1971,7 @@ export function GlobeView({
                   onClick={() => onInspectCountryInTable(selectedBucket.nameFr, q)}
                   className="w-full min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-md bg-[#E8BD6C] text-[#09122B] hover:bg-[#FAF3DF] transition-colors"
                 >
-                  <span>Ouvrir dans la table des titres</span>
+                  <span>{t.globeView.openInTable}</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -1963,9 +1984,9 @@ export function GlobeView({
       {contextLost && (
         <div className="absolute inset-0 z-40 flex items-center justify-center bg-[#071230]/95 text-[#FAF3DF] p-6">
           <div className="max-w-md text-center space-y-2 border border-[#E8BD6C]/40 rounded-xl p-6 bg-[#0E1B3D]">
-            <p className="font-display font-bold text-base">Contexte 3D interrompu</p>
+            <p className="font-display font-bold text-base">{t.globeView.contextLostTitle}</p>
             <p className="text-xs text-[#ECE8E1]/75">
-              Le navigateur a libéré le contexte WebGL. Rechargez l’onglet pour restaurer le globe.
+              {t.globeView.contextLostDesc}
             </p>
           </div>
         </div>
@@ -1989,17 +2010,17 @@ export function GlobeView({
             type="button"
             onClick={() => setDockCollapsed((v) => !v)}
             className="min-h-[40px] sm:min-h-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-3 sm:py-1 rounded-md bg-[#09122B]/94 border border-[#E8BD6C]/35 text-xs sm:text-[11px] font-medium text-[#E8BD6C] hover:text-white hover:border-[#E8BD6C] transition-colors shadow-lg"
-            title="Raccourci clavier : H"
+            title={t.globeView.dockShortcutTitle}
           >
             {dockCollapsed ? (
               <>
                 <ChevronUp className="w-3.5 h-3.5" />
-                <span>Afficher les contrôles</span>
+                <span>{t.globeView.showControls}</span>
               </>
             ) : (
               <>
                 <ChevronDown className="w-3.5 h-3.5" />
-                <span>Masquer les contrôles</span>
+                <span>{t.globeView.hideControls}</span>
               </>
             )}
           </button>
@@ -2015,7 +2036,7 @@ export function GlobeView({
                   type="text"
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="Rechercher artiste, titre, pays…"
+                  placeholder={t.globeView.searchPlaceholder}
                   className="w-full pl-9 sm:pl-8 pr-9 py-2 sm:py-1.5 min-h-[40px] sm:min-h-0 text-base sm:text-xs bg-[#0E1B3D] text-[#FAF3DF] placeholder:text-[#ECE8E1]/45 border border-white/15 rounded-md focus:outline-none focus:border-[#E8BD6C]"
                 />
                 {q && (
@@ -2023,7 +2044,7 @@ export function GlobeView({
                     type="button"
                     onClick={() => setQ('')}
                     className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-[#ECE8E1]/55 hover:text-white"
-                    aria-label="Effacer la recherche"
+                    aria-label={t.globeView.clearSearchAria}
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -2033,10 +2054,10 @@ export function GlobeView({
               <select
                 value={yearFilter}
                 onChange={(e) => setYearFilter(e.target.value)}
-                aria-label="Filtrer par année"
+                aria-label={t.globeView.yearAria}
                 className="col-span-2 sm:w-auto min-h-[40px] sm:min-h-0 px-2.5 py-2 sm:py-1.5 text-base sm:text-xs bg-[#0E1B3D] text-[#FAF3DF] border border-white/15 rounded-md focus:outline-none focus:border-[#E8BD6C]"
               >
-                <option value="">Toutes années</option>
+                <option value="">{t.globeView.allYears}</option>
                 {years.map((y) => (
                   <option key={y.year} value={String(y.year)}>
                     {y.year}
@@ -2053,7 +2074,7 @@ export function GlobeView({
                     : 'bg-[#0E1B3D] text-[#ECE8E1]/80 border-white/15 hover:border-[#9ECAC2]/60'
                 }`}
               >
-                Multi-diffusions
+                {t.globeView.multiOnly}
               </button>
 
               <button
@@ -2066,7 +2087,7 @@ export function GlobeView({
                 }`}
               >
                 <Network className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-[#E8BD6C]" />
-                <span>Réseau</span>
+                <span>{t.globeView.network}</span>
               </button>
 
               <button
@@ -2079,7 +2100,7 @@ export function GlobeView({
                 }`}
               >
                 <Cloud className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-[#9ECAC2]" />
-                <span>Nuages</span>
+                <span>{t.globeView.clouds}</span>
               </button>
 
               <button
@@ -2090,14 +2111,14 @@ export function GlobeView({
                     ? 'bg-[#0E1B3D] text-[#9ECAC2] border-[#9ECAC2]/50'
                     : 'bg-[#0E1B3D] text-[#ECE8E1]/70 border-white/15'
                 }`}
-                title="Activer ou suspendre la rotation du globe"
+                title={t.globeView.rotationTitle}
               >
                 {autoRotate ? (
                   <Pause className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
                 ) : (
                   <Play className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
                 )}
-                <span>Rotation</span>
+                <span>{t.globeView.rotation}</span>
               </button>
 
               <button
@@ -2111,7 +2132,7 @@ export function GlobeView({
                 className="col-span-2 sm:col-span-1 min-h-[40px] sm:min-h-0 inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md bg-[#0E1B3D] text-[#ECE8E1]/85 border border-white/15 hover:border-[#E8BD6C] transition-colors whitespace-nowrap"
               >
                 <RotateCcw className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
-                <span>Réinitialiser</span>
+                <span>{t.globeView.reset}</span>
               </button>
             </div>
 
@@ -2119,7 +2140,7 @@ export function GlobeView({
             {globeData && globeData.countries.length > 0 && (
               <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-0.5">
                 <span className="text-[11px] text-[#ECE8E1]/55 shrink-0 pr-1">
-                  Pays actifs ({globeData.countries.length}) :
+                  {t.globeView.activeCountries} ({formatNum(globeData.countries.length)}) :
                 </span>
                 {globeData.countries.map((c) => {
                   const isActive = c.isoId === selectedIso;
@@ -2140,7 +2161,7 @@ export function GlobeView({
                           isActive ? 'text-[#09122B]/80' : 'text-[#6ED6C3]'
                         }`}
                       >
-                        {formatNumberFR(c.trackCount)}
+                        {formatNum(c.trackCount)}
                       </span>
                     </button>
                   );

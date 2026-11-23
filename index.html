@@ -3,19 +3,76 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>La Planète Bleue FanStats</title>
-    <meta name="description" content="Base de données indexée et moteur de recherche des titres, auteurs, durées, émissions et dates de diffusion du podcast La Planète Bleue." />
-    <meta property="og:title" content="La Planète Bleue FanStats" />
-    <meta property="og:description" content="Base de données indexée et moteur de recherche des titres, auteurs, durées, émissions et dates de diffusion du podcast La Planète Bleue." />
+    <title>La Planète Bleue FanStats — Archive, Statistiques &amp; Globe 3D</title>
+    <meta
+      name="description"
+      content="Explorez l’archive musicale de La Planète Bleue (1995–2026) : globe 3D interactif, 7 100+ titres indexés, classements, extraits audio et playlists."
+    />
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content="Fred Neau / un ecologeek" />
+    <meta name="theme-color" content="#030925" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+
+    <!-- OpenGraph -->
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="La Planète Bleue FanStats" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:title" content="La Planète Bleue FanStats — Archive, Statistiques &amp; Globe 3D" />
+    <meta
+      property="og:description"
+      content="Explorez l’archive musicale de La Planète Bleue (1995–2026) : globe 3D interactif, 7 100+ titres indexés, classements, extraits audio et playlists."
+    />
+    <meta property="og:image" content="/src/assets/images/og_share_planet_1795456375233.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1408" />
+    <meta property="og:image:height" content="768" />
+    <meta property="og:image:alt" content="Globe Sonore 3D de La Planète Bleue FanStats" />
+
+    <!-- Twitter / X Cards -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="La Planète Bleue FanStats — Archive, Statistiques &amp; Globe 3D" />
+    <meta
+      name="twitter:description"
+      content="Explorez l’archive musicale de La Planète Bleue (1995–2026) : globe 3D interactif, 7 100+ titres indexés, classements, extraits audio et playlists."
+    />
+    <meta name="twitter:image" content="/src/assets/images/og_share_planet_1795456375233.jpg" />
+    <meta name="twitter:image:alt" content="Globe Sonore 3D de La Planète Bleue FanStats" />
+
+    <!-- Structured Data (Schema.org) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "La Planète Bleue FanStats",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "All",
+        "inLanguage": ["fr", "en"],
+        "description": "Archive musicale interactive et globe 3D des titres, auteurs, origines géographiques et playlists de l’émission La Planète Bleue (1995–2026).",
+        "creator": {
+          "@type": "Person",
+          "name": "Fred Neau / un ecologeek",
+          "url": "https://www.linkedin.com/in/fredneau/"
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "EUR"
+        }
+      }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Nunito:ital,wght@0,400;0,600;0,700;1,400&family=Red+Hat+Display:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Nunito:ital,wght@0,400;0,600;0,700;1,400&family=Red+Hat+Display:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body class="bg-[#ECE8E1] text-[#030925] antialiased selection:bg-[#9ECAC2]/40 selection:text-[#030925]">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

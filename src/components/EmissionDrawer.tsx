@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ExternalLink, Loader2, Pause, Play, Search, X } from 'lucide-react';
+import { useI18n } from '../i18n';
 import { formatDuration } from '../types';
 import type { EmissionDetailResponse } from '../types';
 import { EmissionOrbitalEmblem } from './EmissionOrbitalEmblem';
@@ -17,6 +18,10 @@ export function EmissionDrawer({
   onSelectEmission,
   onFilterByAuthor,
 }: EmissionDrawerProps) {
+  const { lang, t, formatNum } = useI18n();
+  const tRef = useRef(t);
+  tRef.current = t;
+
   const [data, setData] = useState<EmissionDetailResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +40,7 @@ export function EmissionDrawer({
 
     fetch(`/api/emissions/${encodeURIComponent(slug)}`)
       .then(async (res) => {
-        if (!res.ok) throw new Error('Impossible de charger cette émission.');
+        if (!res.ok) throw new Error(tRef.current.drawer.loadError);
         return (await res.json()) as EmissionDetailResponse;
       })
       .then((json) => {
@@ -63,6 +68,8 @@ export function EmissionDrawer({
 
   if (!slug) return null;
 
+  const numPrefix = lang === 'en' ? '#' : 'nº ';
+
   const handleEnrichTrack = async (trackId: number) => {
     setEnrichingId(trackId);
     try {
@@ -76,15 +83,15 @@ export function EmissionDrawer({
       if (result.found && data) {
         setData({
           ...data,
-          tracks: data.tracks.map((t) =>
-            t.track_id === trackId
+          tracks: data.tracks.map((tr) =>
+            tr.track_id === trackId
               ? {
-                  ...t,
+                  ...tr,
                   duration_sec: result.duration_sec,
                   duration_source: result.duration_source,
                   preview_url: result.preview_url,
                 }
-              : t
+              : tr
           ),
         });
       }
@@ -110,7 +117,7 @@ export function EmissionDrawer({
     setPlayingPreviewTrackId(trackId);
   };
 
-  const versions = data ? Array.from(new Set(data.tracks.map((t) => t.version))) : [];
+  const versions = data ? Array.from(new Set(data.tracks.map((tr) => tr.version))) : [];
 
   return (
     <div
@@ -118,7 +125,7 @@ export function EmissionDrawer({
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label="Détails de l’émission"
+      aria-label={t.drawer.dialogAria}
     >
       <div
         className="relative w-full max-w-2xl bg-[#ECE8E1] h-full overflow-y-auto border-l border-[#DDD8D0] shadow-2xl flex flex-col"
@@ -128,7 +135,7 @@ export function EmissionDrawer({
         <div className="sticky top-0 z-10 bg-[#144980] text-[#FAF8F5] border-b border-[#030925]/20 px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-medium text-[#9ECAC2]">
-              Archive des diffusions
+              {t.drawer.kicker}
               {data?.emission.broadcast_date_label && (
                 <>
                   <span aria-hidden="true"> · </span>
@@ -137,14 +144,14 @@ export function EmissionDrawer({
               )}
             </p>
             <h2 className="font-display text-lg sm:text-xl font-bold text-[#FAF8F5] truncate">
-              {data ? data.emission.title : `Émission ${slug}`}
+              {data ? data.emission.title : `${t.drawer.emissionFallback} ${slug}`}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="w-11 h-11 flex items-center justify-center rounded-lg text-[#ECE8E1]/85 hover:text-white hover:bg-[#030925]/30 transition-colors shrink-0 focus-visible:outline-2 focus-visible:outline-[#9ECAC2]"
-            aria-label="Fermer le panneau"
+            aria-label={t.drawer.closeAria}
           >
             <X className="w-5 h-5" />
           </button>
@@ -154,7 +161,7 @@ export function EmissionDrawer({
           {loading && (
             <div className="flex items-center justify-center py-16 text-[#144980] gap-2 text-sm">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Chargement de la playlist…</span>
+              <span>{t.drawer.loading}</span>
             </div>
           )}
 
@@ -183,22 +190,23 @@ export function EmissionDrawer({
 
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#030925]/75">
                     <span>
-                      Diffusion :{' '}
+                      {t.drawer.broadcastLabel}{' '}
                       <strong className="font-semibold text-[#030925]">
                         {data.emission.broadcast_date_label ||
                           data.emission.broadcast_date ||
-                          'Inconnue'}
+                          t.drawer.unknown}
                       </strong>
                     </span>
                     <span aria-hidden="true">·</span>
                     <span className="font-mono tabular-nums">
-                      {data.tracks.length} titre{data.tracks.length > 1 ? 's' : ''}
+                      {formatNum(data.tracks.length)}{' '}
+                      {data.tracks.length > 1 ? t.drawer.trackPlural : t.drawer.trackSingular}
                     </span>
                     {data.emission.duration_sec && (
                       <>
                         <span aria-hidden="true">·</span>
                         <span className="font-mono tabular-nums">
-                          Format {Math.round(data.emission.duration_sec / 60)} min
+                          {t.drawer.formatLabel} {Math.round(data.emission.duration_sec / 60)} min
                         </span>
                       </>
                     )}
@@ -217,7 +225,7 @@ export function EmissionDrawer({
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#144980] hover:underline whitespace-nowrap"
                     >
-                      <span>Voir la fiche sur laplanetebleue.com</span>
+                      <span>{t.drawer.officialSheet}</span>
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   </div>
@@ -227,14 +235,14 @@ export function EmissionDrawer({
               {data.emission.audio_url && (
                 <div className="border border-[#DDD8D0] rounded-lg p-4 bg-[#FAF8F5] space-y-2">
                   <div className="flex items-center justify-between text-xs text-[#030925]/75">
-                    <span className="font-semibold text-[#030925]">Écouter le podcast complet</span>
+                    <span className="font-semibold text-[#030925]">{t.drawer.listenPodcast}</span>
                     <a
                       href={data.emission.audio_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[#144980] font-semibold hover:underline whitespace-nowrap"
                     >
-                      Fichier MP3
+                      {t.drawer.mp3File}
                     </a>
                   </div>
                   <audio
@@ -249,13 +257,13 @@ export function EmissionDrawer({
               {/* Iconic Dark Playlist Box inspired by laplanetebleue.com */}
               <div className="space-y-4">
                 {versions.map((ver) => {
-                  const list = data.tracks.filter((t) => t.version === ver);
+                  const list = data.tracks.filter((tr) => tr.version === ver);
                   const versionLabel =
                     ver === 'unlimited'
-                      ? 'La Playlist — Version Unlimited'
+                      ? t.drawer.playlistUnlimited
                       : ver === 'radio'
-                        ? 'La Playlist — Version Radio'
-                        : 'La Playlist de l’émission';
+                        ? t.drawer.playlistRadio
+                        : t.drawer.playlistStandard;
                   return (
                     <div key={ver} className="space-y-2.5">
                       <div className="flex items-center justify-between border-b border-[#DDD8D0] pb-2">
@@ -263,7 +271,8 @@ export function EmissionDrawer({
                           {versionLabel}
                         </h3>
                         <span className="text-xs font-mono tabular-nums text-[#144980]">
-                          {list.length} titres
+                          {formatNum(list.length)}{' '}
+                          {list.length > 1 ? t.drawer.trackPlural : t.drawer.trackSingular}
                         </span>
                       </div>
 
@@ -284,8 +293,8 @@ export function EmissionDrawer({
                                       type="button"
                                       onClick={() => togglePreview(track.track_id)}
                                       className="w-9 h-9 min-w-[36px] min-h-[36px] -mt-0.5 flex items-center justify-center rounded-md text-[#9ECAC2] bg-white/5 hover:bg-white/15 transition-colors shrink-0"
-                                      title="Écouter un extrait de 30s"
-                                      aria-label={`Écouter un extrait de ${track.title}`}
+                                      title={t.drawer.playTitle}
+                                      aria-label={`${t.drawer.playAriaPrefix} ${track.title}`}
                                     >
                                       {playingPreviewTrackId === track.track_id ? (
                                         <Pause className="w-4 h-4" />
@@ -328,7 +337,7 @@ export function EmissionDrawer({
 
                                 {track.other_emissions.length > 0 && (
                                   <div className="text-xs text-[#ECE8E1]/60 pt-0.5 flex flex-wrap items-center gap-x-1.5">
-                                    <span>Également diffusé dans :</span>
+                                    <span>{t.drawer.alsoFeaturedIn}</span>
                                     {track.other_emissions.map((other, i) => (
                                       <span key={other.emission_slug}>
                                         {i > 0 && <span aria-hidden="true">, </span>}
@@ -337,7 +346,8 @@ export function EmissionDrawer({
                                           onClick={() => onSelectEmission(other.emission_slug)}
                                           className="font-mono text-[#9ECAC2] hover:underline py-0.5"
                                         >
-                                          nº {other.emission_number ?? other.emission_slug}
+                                          {numPrefix}
+                                          {other.emission_number ?? other.emission_slug}
                                         </button>
                                       </span>
                                     ))}
@@ -357,14 +367,14 @@ export function EmissionDrawer({
                                   disabled={enrichingId === track.track_id}
                                   onClick={() => handleEnrichTrack(track.track_id)}
                                   className="inline-flex items-center gap-1 min-h-[36px] text-xs text-[#ECE8E1]/75 hover:text-[#9ECAC2] px-2.5 py-1.5 rounded border border-white/15 hover:border-[#9ECAC2]/60 transition-colors whitespace-nowrap"
-                                  title="Rechercher la durée (Deezer / iTunes)"
+                                  title={t.drawer.durationSearchTitle}
                                 >
                                   {enrichingId === track.track_id ? (
                                     <Loader2 className="w-3 h-3 animate-spin" />
                                   ) : (
                                     <Search className="w-3 h-3" />
                                   )}
-                                  <span>Durée</span>
+                                  <span>{t.drawer.durationBtn}</span>
                                 </button>
                               )}
                             </div>

@@ -9,7 +9,7 @@ import {
   Radio,
   Search,
 } from 'lucide-react';
-import { formatNumberFR } from '../types';
+import { useI18n } from '../i18n';
 import type { ArchiveStats } from '../types';
 
 export type NavSection = 'tracks' | 'multi' | 'emissions' | 'stats' | 'globe' | 'legal';
@@ -29,6 +29,7 @@ export function HomeView({
   onFilterByAuthor,
   onFilterByCountry,
 }: HomeViewProps) {
+  const { t, formatNum } = useI18n();
   const [quickQuery, setQuickQuery] = useState('');
 
   const durationPct =
@@ -48,7 +49,7 @@ export function HomeView({
         {/* Background Screenshot Layer */}
         <img
           src="/assets/aistudio/image_dc5aed3a.png"
-          alt="Globe Sonore 3D de La Planète Bleue FanStats reliant les pays par émissions"
+          alt={t.home.globeAlt}
           referrerPolicy="no-referrer"
           className="absolute inset-0 w-full h-full object-cover object-[72%_32%] sm:object-[76%_center] opacity-90 select-none pointer-events-none"
         />
@@ -66,34 +67,38 @@ export function HomeView({
         <div className="relative z-10 max-w-[1360px] mx-auto px-4 sm:px-6 py-10 sm:py-16 lg:py-20 min-h-[420px] sm:min-h-[480px] lg:min-h-[540px] flex flex-col justify-end lg:justify-center">
           <div className="max-w-xl space-y-4 sm:space-y-5">
             <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-display font-semibold uppercase tracking-wider text-[#9ECAC2]">
-              <span>01. Vue 3D</span>
+              <span>{t.home.globeKicker}</span>
               <span aria-hidden="true" className="text-white/30">
                 ·
               </span>
-              <span>Globe Sonore Ligne Claire</span>
+              <span>{t.home.globeSubkicker}</span>
             </div>
 
             <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white text-balance leading-[1.1]">
-              La carte vivante de La Planète Bleue en 3D
+              {t.home.globeTitle}
             </h1>
 
             <p className="text-sm sm:text-base text-[#ECE8E1]/90 leading-relaxed max-w-lg">
-              Explorez les origines musicales de chaque pays sur un globe topographique interactif,
-              suivez les connexions tissées entre pays diffusés au fil d’une même émission et
-              écoutez les extraits directement depuis le relief.
+              {t.home.globeDesc}
             </p>
 
             {stats && (
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm font-mono tabular-nums text-[#E8BD6C] pt-0.5">
-                <span>{formatNumberFR(stats.emissions_count)} émissions</span>
+                <span>
+                  {formatNum(stats.emissions_count)} {t.home.emissionsUnit}
+                </span>
                 <span aria-hidden="true" className="text-white/25">
                   ·
                 </span>
-                <span>{formatNumberFR(stats.tracks_count)} titres</span>
+                <span>
+                  {formatNum(stats.tracks_count)} {t.home.tracksUnit}
+                </span>
                 <span aria-hidden="true" className="text-white/25">
                   ·
                 </span>
-                <span>{formatNumberFR(stats.appearances_count)} passages</span>
+                <span>
+                  {formatNum(stats.appearances_count)} {t.home.playsUnit}
+                </span>
               </div>
             )}
 
@@ -104,7 +109,7 @@ export function HomeView({
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3 min-h-[48px] text-sm font-bold text-[#030925] bg-[#9ECAC2] hover:bg-[#FAF8F5] rounded-md transition-colors whitespace-nowrap shrink-0 focus-visible:outline-2 focus-visible:outline-[#FAF8F5]"
               >
                 <Globe className="w-4 h-4 shrink-0" />
-                <span>Explorer la Vue 3D</span>
+                <span>{t.home.globeCta}</span>
                 <ArrowRight className="w-4 h-4 shrink-0" />
               </button>
             </div>
@@ -123,32 +128,30 @@ export function HomeView({
         </div>
       </section>
 
-      {/* Main Content: Un bloc dédié pour chaque autre item du menu */}
+      {/* Main Content */}
       <main className="flex-1 max-w-[1360px] w-full mx-auto px-3.5 sm:px-6 py-6 sm:py-10 space-y-5 sm:space-y-6">
-        {/* Row 1 : Titres (7 cols) + Multi-diffusions (5 cols) */}
+        {/* Row 1 : Titres (7 cols) + Site officiel (5 cols) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-stretch">
           {/* Bloc 2 : Titres */}
           <article className="lg:col-span-7 bg-[#FAF8F5] border border-[#DDD8D0] rounded-xl p-5 sm:p-8 flex flex-col justify-between gap-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs font-display font-semibold uppercase tracking-wider text-[#144980]">
-                  02. Titres
+                  {t.home.tracksKicker}
                 </span>
                 {stats && (
                   <span className="text-xs font-mono tabular-nums text-[#030925]/65">
-                    {formatNumberFR(stats.tracks_count)} titres uniques
+                    {formatNum(stats.tracks_count)} {t.home.tracksUnique}
                   </span>
                 )}
               </div>
 
               <div className="space-y-2">
                 <h2 className="font-display text-xl sm:text-2xl font-bold text-[#030925] text-balance">
-                  Recherchez des morceaux diffusés depuis 1995
+                  {t.home.tracksTitle}
                 </h2>
                 <p className="text-sm sm:text-base text-[#030925]/80 leading-relaxed">
-                  Interrogez l’index complet des titres programmés de 1995 à 2026 par artiste,
-                  morceau, label, pays, année ou numéro d’émission. Écoutez des extraits audio de
-                  30 secondes, vérifiez les durées et exportez vos recherches en CSV.
+                  {t.home.tracksDesc}
                 </p>
               </div>
 
@@ -159,7 +162,7 @@ export function HomeView({
                     type="text"
                     value={quickQuery}
                     onChange={(e) => setQuickQuery(e.target.value)}
-                    placeholder="Rechercher un artiste, titre, label ou pays…"
+                    placeholder={t.home.tracksPlaceholder}
                     className="w-full pl-10 pr-3 min-h-[44px] py-2 text-base sm:text-sm bg-white border border-[#DDD8D0] rounded-md focus:outline-none focus:border-[#144980] transition-colors"
                   />
                 </div>
@@ -168,7 +171,7 @@ export function HomeView({
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 min-h-[44px] text-xs font-semibold text-[#FAF8F5] bg-[#030925] hover:bg-[#144980] rounded-md transition-colors whitespace-nowrap shrink-0"
                 >
                   <ListMusic className="w-4 h-4 text-[#9ECAC2]" />
-                  <span>{quickQuery.trim() ? 'Rechercher' : 'Ouvrir les titres'}</span>
+                  <span>{quickQuery.trim() ? t.home.tracksSearchBtn : t.home.tracksOpenBtn}</span>
                 </button>
               </form>
             </div>
@@ -176,15 +179,15 @@ export function HomeView({
             {stats && (
               <div className="pt-4 border-t border-[#DDD8D0] flex flex-wrap items-center justify-between gap-3 text-xs text-[#030925]/70">
                 <div className="font-mono tabular-nums">
-                  {formatNumberFR(stats.appearances_count)} passages indexés ·{' '}
-                  {formatNumberFR(stats.tracks_with_duration)} durées renseignées
+                  {formatNum(stats.appearances_count)} {t.home.tracksIndexedPlays} ·{' '}
+                  {formatNum(stats.tracks_with_duration)} {t.home.tracksKnownDurations}
                 </div>
                 <button
                   type="button"
                   onClick={() => onNavigate('tracks')}
                   className="inline-flex items-center gap-1.5 font-semibold text-[#144980] hover:underline whitespace-nowrap"
                 >
-                  <span>Explorer toute la base</span>
+                  <span>{t.home.tracksExploreAll}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -197,7 +200,7 @@ export function HomeView({
               <div className="w-full bg-[#030C24] border-b border-[#DDD8D0] px-5 py-7 sm:px-7 sm:py-9 flex items-center justify-center">
                 <img
                   src="/assets/aistudio/image_968f0971.png"
-                  alt="Logo officiel La Planète Bleue avec parabole"
+                  alt={t.home.officialBannerAlt}
                   referrerPolicy="no-referrer"
                   className="w-full max-w-[360px] h-auto object-contain select-none"
                 />
@@ -205,17 +208,15 @@ export function HomeView({
               <div className="p-5 sm:p-7 space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-xs font-display font-semibold uppercase tracking-wider text-[#144980]">
-                    03. Site officiel
+                    {t.home.officialKicker}
                   </span>
                   <span className="text-xs font-mono text-[#030925]/65">laplanetebleue.com</span>
                 </div>
                 <h2 className="font-display text-xl sm:text-2xl font-bold text-[#030925] text-balance">
-                  Découvrez le site officiel de La Planète Bleue
+                  {t.home.officialTitle}
                 </h2>
                 <p className="text-sm text-[#030925]/80 leading-relaxed">
-                  Retrouvez les émissions complètes en écoute, les playlists éditoriales, les
-                  chroniques d’Yves Blanc et toute l’actualité sonore du meilleur podcast de
-                  l’univers connu directement sur le site officiel.
+                  {t.home.officialDesc}
                 </p>
               </div>
             </div>
@@ -228,7 +229,7 @@ export function HomeView({
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 min-h-[44px] text-xs font-semibold text-[#FAF8F5] bg-[#144980] hover:bg-[#030925] rounded-md transition-colors whitespace-nowrap"
               >
                 <Radio className="w-4 h-4 text-[#9ECAC2]" />
-                <span>Visiter laplanetebleue.com</span>
+                <span>{t.home.officialCta}</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>
@@ -242,29 +243,27 @@ export function HomeView({
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs font-display font-semibold uppercase tracking-wider text-[#9ECAC2]">
-                  04. Multi-diffusions
+                  {t.home.multiKicker}
                 </span>
                 <Layers className="w-4 h-4 text-[#9ECAC2]" aria-hidden="true" />
               </div>
 
               <div className="space-y-2">
                 <h2 className="font-display text-xl sm:text-2xl font-bold text-white text-balance">
-                  Les classiques revenus à l’antenne
+                  {t.home.multiTitle}
                 </h2>
                 <p className="text-sm text-[#ECE8E1]/85 leading-relaxed">
-                  Retrouvez uniquement les titres sélectionnés à plusieurs reprises dans l’histoire
-                  de La Planète Bleue, classés par nombre d’émissions pour repérer les œuvres phares
-                  de la discothèque.
+                  {t.home.multiDesc}
                 </p>
               </div>
 
               {stats && (
                 <div className="pt-2">
                   <div className="text-3xl sm:text-4xl font-bold font-mono tabular-nums text-[#9ECAC2]">
-                    {formatNumberFR(stats.multi_emission_tracks)}
+                    {formatNum(stats.multi_emission_tracks)}
                   </div>
                   <div className="text-xs text-[#ECE8E1]/70 mt-1">
-                    titres programmés dans au moins deux émissions distinctes
+                    {t.home.multiStatSub}
                   </div>
                 </div>
               )}
@@ -276,7 +275,7 @@ export function HomeView({
                 onClick={() => onNavigate('multi')}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 min-h-[44px] text-xs font-bold text-[#030925] bg-[#9ECAC2] hover:bg-[#FAF8F5] rounded-md transition-colors whitespace-nowrap"
               >
-                <span>Voir les multi-diffusions</span>
+                <span>{t.home.multiCta}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -287,21 +286,20 @@ export function HomeView({
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs font-display font-semibold uppercase tracking-wider text-[#144980]">
-                  05. Statistiques
+                  {t.home.statsKicker}
                 </span>
                 <span className="text-xs font-mono tabular-nums text-[#030925]/65">
-                  {durationPct}% durées renseignées
+                  {durationPct}
+                  {t.home.statsKnownPct}
                 </span>
               </div>
 
               <div className="space-y-2">
                 <h2 className="font-display text-xl sm:text-2xl font-bold text-[#030925] text-balance">
-                  Classements auteurs, titres, pays et années
+                  {t.home.statsTitle}
                 </h2>
                 <p className="text-sm sm:text-base text-[#030925]/80 leading-relaxed">
-                  Consultez les palmarès complets des artistes et des pays les plus représentés, la
-                  répartition annuelle des diffusions et l’avancement de l’enrichissement des durées
-                  musicales.
+                  {t.home.statsDesc}
                 </p>
               </div>
 
@@ -309,7 +307,7 @@ export function HomeView({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[#DDD8D0]">
                   <div className="space-y-1.5">
                     <div className="text-xs font-display font-semibold uppercase tracking-wider text-[#030925]/60">
-                      Auteurs en tête
+                      {t.home.statsTopAuthors}
                     </div>
                     <div className="divide-y divide-[#DDD8D0]/60">
                       {stats.topAuthors.slice(0, 3).map((author, idx) => (
@@ -326,7 +324,7 @@ export function HomeView({
                             {author.author}
                           </span>
                           <span className="text-xs font-mono tabular-nums text-[#030925]/65 shrink-0">
-                            {formatNumberFR(author.play_count)} diff.
+                            {formatNum(author.play_count)} {t.home.statsPlaysAbbr}
                           </span>
                         </button>
                       ))}
@@ -335,7 +333,7 @@ export function HomeView({
 
                   <div className="space-y-1.5">
                     <div className="text-xs font-display font-semibold uppercase tracking-wider text-[#030925]/60">
-                      Origines principales
+                      {t.home.statsTopCountries}
                     </div>
                     <div className="divide-y divide-[#DDD8D0]/60">
                       {stats.topCountries.slice(0, 3).map((country, idx) => (
@@ -352,7 +350,7 @@ export function HomeView({
                             {country.country}
                           </span>
                           <span className="text-xs font-mono tabular-nums text-[#030925]/65 shrink-0">
-                            {formatNumberFR(country.count)} titres
+                            {formatNum(country.count)} {t.home.tracksUnit}
                           </span>
                         </button>
                       ))}
@@ -369,7 +367,7 @@ export function HomeView({
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 min-h-[44px] text-xs font-semibold text-[#FAF8F5] bg-[#144980] hover:bg-[#030925] rounded-md transition-colors whitespace-nowrap"
               >
                 <BarChart3 className="w-4 h-4 text-[#9ECAC2]" />
-                <span>Ouvrir les statistiques</span>
+                <span>{t.home.statsCta}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>

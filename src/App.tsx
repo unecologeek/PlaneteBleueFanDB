@@ -20,12 +20,18 @@ import { HomeView } from './components/HomeView';
 import { InfiniteSentinel } from './components/InfiniteSentinel';
 import { LegalView } from './components/LegalView';
 import { StatsView } from './components/StatsView';
-import { formatDuration, formatNumberFR } from './types';
+import { useI18n } from './i18n';
+import { formatDuration } from './types';
 import type { ArchiveStats, SyncStatus, TrackSearchItem } from './types';
 
 type ActiveTab = 'home' | 'tracks' | 'multi' | 'emissions' | 'stats' | 'globe' | 'legal';
 
 export default function App() {
+  const { lang, t, toggleLang, formatNum } = useI18n();
+  const tRef = useRef(t);
+  tRef.current = t;
+  const numPrefix = lang === 'en' ? '#' : 'nº ';
+
   const [activeTab, setActiveTab] = useState<ActiveTab>('home');
   const [stats, setStats] = useState<ArchiveStats | null>(null);
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
@@ -120,7 +126,7 @@ export default function App() {
         params.set('limit', '40');
 
         const res = await fetch(`/api/tracks?${params.toString()}`);
-        if (!res.ok) throw new Error('Erreur lors de la recherche dans la base.');
+        if (!res.ok) throw new Error(tRef.current.tracksView.fetchError);
         const data = await res.json();
         if (seq !== trackRequestSeq.current) return;
 
@@ -218,22 +224,22 @@ export default function App() {
       };
       if (data.found) {
         setTracks((prev) =>
-          prev.map((t) =>
-            t.id === trackId
+          prev.map((item) =>
+            item.id === trackId
               ? {
-                  ...t,
+                  ...item,
                   duration_sec: data.duration_sec,
                   duration_source: data.duration_source,
                   preview_url: data.preview_url,
                 }
-              : t
+              : item
           )
         );
         fetchStats();
       } else {
         setEditingDurationId(trackId);
         setDurationDraft('');
-        setDurationError('Introuvable — saisie mm:ss');
+        setDurationError(tRef.current.tracksView.notFoundManual);
       }
     } finally {
       setEnrichingTrackId(null);
@@ -250,21 +256,21 @@ export default function App() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setDurationError(data.error || 'Format invalide');
+        setDurationError(data.error || tRef.current.tracksView.invalidFormat);
         return;
       }
       setTracks((prev) =>
-        prev.map((t) =>
-          t.id === trackId
-            ? { ...t, duration_sec: data.duration_sec, duration_source: 'manual' }
-            : t
+        prev.map((item) =>
+          item.id === trackId
+            ? { ...item, duration_sec: data.duration_sec, duration_source: 'manual' }
+            : item
         )
       );
       setEditingDurationId(null);
       setDurationDraft('');
       fetchStats();
     } catch {
-      setDurationError('Erreur réseau');
+      setDurationError(tRef.current.tracksView.networkError);
     }
   };
 
@@ -360,7 +366,7 @@ export default function App() {
                   : 'text-[#ECE8E1]/85 border-transparent hover:text-[#9ECAC2]'
               }`}
             >
-              Accueil
+              {t.nav.home}
             </button>
             <button
               type="button"
@@ -371,7 +377,7 @@ export default function App() {
                   : 'text-[#ECE8E1]/85 border-transparent hover:text-[#9ECAC2]'
               }`}
             >
-              Vue 3D
+              {t.nav.globe}
             </button>
             <button
               type="button"
@@ -382,7 +388,7 @@ export default function App() {
                   : 'text-[#ECE8E1]/85 border-transparent hover:text-[#9ECAC2]'
               }`}
             >
-              Titres
+              {t.nav.tracks}
             </button>
             <button
               type="button"
@@ -393,7 +399,7 @@ export default function App() {
                   : 'text-[#ECE8E1]/85 border-transparent hover:text-[#9ECAC2]'
               }`}
             >
-              Multi-diffusions
+              {t.nav.multi}
             </button>
             <button
               type="button"
@@ -404,7 +410,7 @@ export default function App() {
                   : 'text-[#ECE8E1]/85 border-transparent hover:text-[#9ECAC2]'
               }`}
             >
-              Émissions
+              {t.nav.emissions}
             </button>
             <button
               type="button"
@@ -415,7 +421,7 @@ export default function App() {
                   : 'text-[#ECE8E1]/85 border-transparent hover:text-[#9ECAC2]'
               }`}
             >
-              Statistiques
+              {t.nav.stats}
             </button>
             <button
               type="button"
@@ -426,24 +432,38 @@ export default function App() {
                   : 'text-[#ECE8E1]/85 border-transparent hover:text-[#9ECAC2]'
               }`}
             >
-              Mentions légales
+              {t.nav.legal}
             </button>
           </nav>
 
-          {/* Zone 3: Primary action + Mobile Menu Toggle */}
+          {/* Zone 3: Language Flag Switcher + Primary action + Mobile Menu Toggle */}
           <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={toggleLang}
+              aria-label={t.nav.switchToLabel}
+              title={t.nav.switchToLabel}
+              className="inline-flex items-center justify-center min-w-[40px] min-h-[40px] px-2 rounded-md bg-white/10 hover:bg-white/20 border border-white/15 transition-colors shrink-0 focus-visible:outline-2 focus-visible:outline-[#9ECAC2]"
+            >
+              <span className="text-lg leading-none" aria-hidden="true">
+                {t.nav.switchToFlag}
+              </span>
+            </button>
+
             <button
               type="button"
               onClick={handleTriggerSync}
               disabled={syncStatus?.running}
               className="inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-4 min-h-[40px] text-xs font-semibold text-[#030925] bg-[#9ECAC2] hover:bg-[#FAF8F5] rounded-md transition-colors disabled:opacity-60 whitespace-nowrap shrink-0 focus-visible:outline-2 focus-visible:outline-[#9ECAC2]"
-              aria-label="Synchroniser la base"
+              aria-label={t.nav.syncAria}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${syncStatus?.running ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">
-                {syncStatus?.running ? 'Synchronisation…' : 'Synchroniser'}
+                {syncStatus?.running ? t.nav.syncing : t.nav.sync}
               </span>
-              <span className="sm:hidden">{syncStatus?.running ? 'Sync…' : 'Sync'}</span>
+              <span className="sm:hidden">
+                {syncStatus?.running ? t.nav.syncingShort : t.nav.syncShort}
+              </span>
             </button>
 
             <button
@@ -451,7 +471,7 @@ export default function App() {
               onClick={() => setMobileMenuOpen((v) => !v)}
               className="lg:hidden inline-flex items-center justify-center w-11 h-11 rounded-md text-[#FAF8F5] hover:bg-white/10 transition-colors focus-visible:outline-2 focus-visible:outline-[#9ECAC2]"
               aria-expanded={mobileMenuOpen}
-              aria-label={mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              aria-label={mobileMenuOpen ? t.nav.closeMenu : t.nav.openMenu}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -461,18 +481,18 @@ export default function App() {
         {/* Slide-down Mobile/Tablet Navigation Sheet */}
         {mobileMenuOpen && (
           <nav
-            aria-label="Navigation principale"
+            aria-label={t.nav.mainNavAria}
             className="lg:hidden border-t border-white/10 bg-[#030925] px-4 py-3 grid grid-cols-2 gap-2"
           >
             {(
               [
-                ['home', 'Accueil'],
-                ['globe', 'Vue 3D'],
-                ['tracks', 'Titres'],
-                ['multi', 'Multi-diffusions'],
-                ['emissions', 'Émissions'],
-                ['stats', 'Statistiques'],
-                ['legal', 'Mentions légales'],
+                ['home', t.nav.home],
+                ['globe', t.nav.globe],
+                ['tracks', t.nav.tracks],
+                ['multi', t.nav.multi],
+                ['emissions', t.nav.emissions],
+                ['stats', t.nav.stats],
+                ['legal', t.nav.legal],
               ] as const
             ).map(([key, label]) => (
               <button
@@ -523,7 +543,7 @@ export default function App() {
           <footer className="bg-[#144980] text-[#ECE8E1] mt-auto">
             <div className="max-w-[1360px] mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-center sm:text-left">
               <span>
-                La Planète Bleue FanStats · Par{' '}
+                La Planète Bleue FanStats · {t.footer.by}{' '}
                 <a
                   href="https://www.linkedin.com/in/fredneau/"
                   target="_blank"
@@ -539,7 +559,7 @@ export default function App() {
                   onClick={() => switchTab('legal')}
                   className="text-[#ECE8E1]/90 hover:text-[#9ECAC2] hover:underline font-semibold py-1"
                 >
-                  Mentions légales
+                  {t.footer.legal}
                 </button>
                 <span className="text-white/25" aria-hidden="true">
                   ·
@@ -550,7 +570,7 @@ export default function App() {
                   rel="noopener noreferrer"
                   className="text-[#9ECAC2] hover:underline font-semibold py-1"
                 >
-                  Source officielle : laplanetebleue.com
+                  {t.footer.officialSource}
                 </a>
               </div>
             </div>
@@ -564,18 +584,17 @@ export default function App() {
               <div className="space-y-1.5 sm:space-y-2 max-w-2xl">
                 <h1 className="font-display text-xl sm:text-3xl font-bold tracking-tight text-white text-balance">
                   {activeTab === 'legal'
-                    ? 'Mentions légales & À propos'
+                    ? t.hero.legal
                     : activeTab === 'emissions'
-                      ? 'Archive des émissions'
+                      ? t.hero.emissions
                       : activeTab === 'stats'
-                        ? 'Statistiques & classements de la discothèque'
+                        ? t.hero.stats
                         : activeTab === 'multi'
-                          ? 'Titres diffusés dans plusieurs émissions'
-                          : 'Base de données des titres diffusés'}
+                          ? t.hero.multi
+                          : t.hero.tracks}
                 </h1>
                 <p className="text-xs sm:text-base text-[#ECE8E1]/90 italic leading-relaxed">
-                  Qu’est-ce qu’on écoutera dans 10 ans ? Et dans 100 ans ? — Index complet des titres,
-                  auteurs, durées, émissions et dates de diffusion (1995–2026).
+                  {t.hero.subtitle}
                 </p>
               </div>
 
@@ -588,14 +607,14 @@ export default function App() {
                     className="inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 min-h-[44px] sm:min-h-[38px] text-xs font-semibold text-[#FAF8F5] bg-[#030925]/45 border border-[#9ECAC2]/40 hover:bg-[#030925]/70 rounded-md transition-colors disabled:opacity-50 whitespace-nowrap shrink-0"
                   >
                     <Clock className="w-3.5 h-3.5 text-[#9ECAC2] shrink-0" />
-                    <span>Enrichir durées</span>
+                    <span>{t.hero.enrichDurations}</span>
                   </button>
                   <a
                     href={exportCsvUrl}
                     className="inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 min-h-[44px] sm:min-h-[38px] text-xs font-semibold text-[#FAF8F5] bg-[#030925]/45 border border-[#9ECAC2]/40 hover:bg-[#030925]/70 rounded-md transition-colors whitespace-nowrap shrink-0"
                   >
                     <Download className="w-3.5 h-3.5 text-[#9ECAC2] shrink-0" />
-                    <span>Exporter CSV</span>
+                    <span>{t.hero.exportCsv}</span>
                   </a>
                 </div>
               )}
@@ -643,16 +662,16 @@ export default function App() {
                   }}
                   className="text-left bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg px-3.5 py-3 sm:px-4 sm:py-3.5 hover:border-[#144980] transition-colors min-h-[68px]"
                 >
-                  <div className="text-[11px] sm:text-xs text-[#030925]/65">Titres uniques indexés</div>
+                  <div className="text-[11px] sm:text-xs text-[#030925]/65">{t.kpi.uniqueTracks}</div>
                   <div className="text-lg sm:text-xl font-bold font-mono tabular-nums text-[#030925] mt-0.5 sm:mt-1">
-                    {formatNumberFR(stats.tracks_count)}
+                    {formatNum(stats.tracks_count)}
                   </div>
                 </button>
 
                 <div className="bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg px-3.5 py-3 sm:px-4 sm:py-3.5 min-h-[68px]">
-                  <div className="text-[11px] sm:text-xs text-[#030925]/65">Passages en émission</div>
+                  <div className="text-[11px] sm:text-xs text-[#030925]/65">{t.kpi.appearances}</div>
                   <div className="text-lg sm:text-xl font-bold font-mono tabular-nums text-[#030925] mt-0.5 sm:mt-1">
-                    {formatNumberFR(stats.appearances_count)}
+                    {formatNum(stats.appearances_count)}
                   </div>
                 </div>
 
@@ -661,9 +680,11 @@ export default function App() {
                   onClick={() => switchTab('emissions')}
                   className="text-left bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg px-3.5 py-3 sm:px-4 sm:py-3.5 hover:border-[#144980] transition-colors min-h-[68px]"
                 >
-                  <div className="text-[11px] sm:text-xs text-[#030925]/65">Émissions archivées</div>
+                  <div className="text-[11px] sm:text-xs text-[#030925]/65">
+                    {t.kpi.archivedEmissions}
+                  </div>
                   <div className="text-lg sm:text-xl font-bold font-mono tabular-nums text-[#030925] mt-0.5 sm:mt-1">
-                    {formatNumberFR(stats.emissions_count)}
+                    {formatNum(stats.emissions_count)}
                   </div>
                 </button>
 
@@ -672,9 +693,9 @@ export default function App() {
                   onClick={() => switchTab('multi')}
                   className="text-left bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg px-3.5 py-3 sm:px-4 sm:py-3.5 hover:border-[#144980] transition-colors min-h-[68px]"
                 >
-                  <div className="text-[11px] sm:text-xs text-[#030925]/65">Titres multi-diffusions</div>
+                  <div className="text-[11px] sm:text-xs text-[#030925]/65">{t.kpi.multiTracks}</div>
                   <div className="text-lg sm:text-xl font-bold font-mono tabular-nums text-[#144980] mt-0.5 sm:mt-1">
-                    {formatNumberFR(stats.multi_emission_tracks)}
+                    {formatNum(stats.multi_emission_tracks)}
                   </div>
                 </button>
               </section>
@@ -723,7 +744,7 @@ export default function App() {
                         type="text"
                         value={q}
                         onChange={(e) => setQ(e.target.value)}
-                        placeholder="Rechercher titre, auteur, label, pays ou nº…"
+                        placeholder={t.tracksView.searchPlaceholder}
                         className="w-full pl-10 pr-10 min-h-[44px] py-2 text-base sm:text-sm bg-white border border-[#DDD8D0] rounded-md focus:outline-none focus:border-[#144980] transition-colors"
                       />
                       {q && (
@@ -731,7 +752,7 @@ export default function App() {
                           type="button"
                           onClick={() => setQ('')}
                           className="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center text-[#030925]/45 hover:text-[#030925]"
-                          aria-label="Effacer la recherche"
+                          aria-label={t.tracksView.clearSearch}
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -743,8 +764,8 @@ export default function App() {
                         type="text"
                         value={authorFilter}
                         onChange={(e) => setAuthorFilter(e.target.value)}
-                        placeholder="Filtrer par auteur…"
-                        aria-label="Filtrer par auteur"
+                        placeholder={t.tracksView.authorPlaceholder}
+                        aria-label={t.tracksView.authorAria}
                         className="col-span-2 sm:w-44 min-h-[44px] px-3 py-2 text-base sm:text-sm bg-white border border-[#DDD8D0] rounded-md focus:outline-none focus:border-[#144980]"
                       />
 
@@ -754,18 +775,18 @@ export default function App() {
                         max={2000}
                         value={emissionFilter}
                         onChange={(e) => setEmissionFilter(e.target.value)}
-                        placeholder="Nº émission"
-                        aria-label="Filtrer par numéro d'émission"
+                        placeholder={t.tracksView.emissionPlaceholder}
+                        aria-label={t.tracksView.emissionAria}
                         className="w-full sm:w-28 min-h-[44px] px-3 py-2 text-base sm:text-sm font-mono bg-white border border-[#DDD8D0] rounded-md focus:outline-none focus:border-[#144980]"
                       />
 
                       <select
                         value={yearFilter}
                         onChange={(e) => setYearFilter(e.target.value)}
-                        aria-label="Filtrer par année"
+                        aria-label={t.tracksView.yearAria}
                         className="w-full sm:w-auto min-h-[44px] px-3 py-2 text-base sm:text-sm bg-white border border-[#DDD8D0] rounded-md focus:outline-none focus:border-[#144980]"
                       >
-                        <option value="">Toutes années</option>
+                        <option value="">{t.tracksView.allYears}</option>
                         {stats?.years.map((y) => (
                           <option key={y.year} value={String(y.year)}>
                             {y.year}
@@ -776,10 +797,10 @@ export default function App() {
                       <select
                         value={countryFilter}
                         onChange={(e) => setCountryFilter(e.target.value)}
-                        aria-label="Filtrer par pays"
+                        aria-label={t.tracksView.countryAria}
                         className="col-span-2 sm:col-span-1 w-full sm:w-auto sm:max-w-[170px] min-h-[44px] px-3 py-2 text-base sm:text-sm bg-white border border-[#DDD8D0] rounded-md focus:outline-none focus:border-[#144980]"
                       >
-                        <option value="">Tous pays</option>
+                        <option value="">{t.tracksView.allCountries}</option>
                         {countryFilter &&
                           !stats?.topCountries.some((c) => c.country === countryFilter) && (
                             <option value={countryFilter}>{countryFilter}</option>
@@ -799,9 +820,9 @@ export default function App() {
                       <div className="grid grid-cols-3 sm:flex items-center gap-1 p-1 bg-[#ECE8E1] rounded-md w-full sm:w-auto">
                         {(
                           [
-                            ['all', 'Toutes'],
-                            ['known', 'Durée OK'],
-                            ['missing', 'Sans durée'],
+                            ['all', t.tracksView.durationAll],
+                            ['known', t.tracksView.durationKnown],
+                            ['missing', t.tracksView.durationMissing],
                           ] as const
                         ).map(([val, label]) => (
                           <button
@@ -829,7 +850,7 @@ export default function App() {
                               : 'bg-white text-[#030925]/80 border-[#DDD8D0] hover:border-[#144980]'
                           }`}
                         >
-                          Diffusés plusieurs fois uniquement
+                          {t.tracksView.multiOnly}
                         </button>
                       )}
 
@@ -840,29 +861,29 @@ export default function App() {
                           className="inline-flex items-center gap-1 text-xs font-medium text-[#144980] hover:text-[#030925] px-2 min-h-[36px] whitespace-nowrap"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
-                          <span>Réinitialiser</span>
+                          <span>{t.tracksView.reset}</span>
                         </button>
                       )}
                     </div>
 
                     <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
                       <span className="text-xs font-mono tabular-nums text-[#030925]/65 whitespace-nowrap">
-                        {formatNumberFR(tracks.length)} / {formatNumberFR(total)} résultat
-                        {total > 1 ? 's' : ''}
+                        {formatNum(tracks.length)} / {formatNum(total)}{' '}
+                        {total > 1 ? t.tracksView.resultPlural : t.tracksView.resultSingular}
                       </span>
                       <select
                         value={sort}
                         onChange={(e) => setSort(e.target.value)}
-                        aria-label="Trier les résultats"
+                        aria-label={t.tracksView.sortAria}
                         className="min-h-[42px] sm:min-h-[34px] px-2.5 py-1.5 text-base sm:text-xs font-semibold bg-white border border-[#DDD8D0] rounded-md focus:outline-none focus:border-[#144980]"
                       >
-                        <option value="latest">Diffusion : plus récents</option>
-                        <option value="oldest">Diffusion : plus anciens</option>
-                        <option value="appearances_desc">Plus diffusés</option>
-                        <option value="title">Titre (A–Z)</option>
-                        <option value="author">Auteur (A–Z)</option>
-                        <option value="duration_desc">Durée décroissante</option>
-                        <option value="duration_asc">Durée croissante</option>
+                        <option value="latest">{t.tracksView.sortLatest}</option>
+                        <option value="oldest">{t.tracksView.sortOldest}</option>
+                        <option value="appearances_desc">{t.tracksView.sortAppearances}</option>
+                        <option value="title">{t.tracksView.sortTitle}</option>
+                        <option value="author">{t.tracksView.sortAuthor}</option>
+                        <option value="duration_desc">{t.tracksView.sortDurationDesc}</option>
+                        <option value="duration_asc">{t.tracksView.sortDurationAsc}</option>
                       </select>
                     </div>
                   </div>
@@ -889,11 +910,10 @@ export default function App() {
                     ) : tracks.length === 0 ? (
                       <div className="py-12 px-5 text-center">
                         <p className="text-sm font-semibold text-[#030925]">
-                          Aucun titre ne correspond à vos critères
+                          {t.tracksView.emptyTitle}
                         </p>
                         <p className="text-xs text-[#030925]/65 mt-1">
-                          Essayez un autre mot-clé, supprimez un filtre ou lancez une
-                          synchronisation.
+                          {t.tracksView.emptyDesc}
                         </p>
                         {hasActiveFilters && (
                           <button
@@ -901,7 +921,7 @@ export default function App() {
                             onClick={resetFilters}
                             className="mt-4 px-4 min-h-[44px] text-xs font-semibold text-[#144980] border border-[#DDD8D0] bg-white rounded-md hover:border-[#144980]"
                           >
-                            Réinitialiser les filtres
+                            {t.tracksView.emptyReset}
                           </button>
                         )}
                       </div>
@@ -927,8 +947,8 @@ export default function App() {
                                         ? 'bg-[#030925] text-[#9ECAC2] border-[#030925]'
                                         : 'bg-white text-[#144980] border-[#DDD8D0] active:bg-[#9ECAC2]/30'
                                     }`}
-                                    title="Écouter un extrait audio de 30 secondes"
-                                    aria-label={`Extrait de ${track.title}`}
+                                    title={t.tracksView.playTitle}
+                                    aria-label={`${t.tracksView.playAriaPrefix} ${track.title}`}
                                   >
                                     {playingPreviewTrackId === track.id ? (
                                       <Pause className="w-4 h-4" />
@@ -969,7 +989,7 @@ export default function App() {
                                         type="button"
                                         onClick={() => handleSaveManualDuration(track.id)}
                                         className="w-9 h-9 flex items-center justify-center text-emerald-800 bg-emerald-50 rounded"
-                                        aria-label="Enregistrer la durée"
+                                        aria-label={t.tracksView.saveDurationAria}
                                       >
                                         <Check className="w-4 h-4" />
                                       </button>
@@ -980,7 +1000,7 @@ export default function App() {
                                           setDurationError(null);
                                         }}
                                         className="w-9 h-9 flex items-center justify-center text-[#030925]/60 bg-white border border-[#DDD8D0] rounded"
-                                        aria-label="Annuler"
+                                        aria-label={t.tracksView.cancelAria}
                                       >
                                         <X className="w-4 h-4" />
                                       </button>
@@ -1004,7 +1024,7 @@ export default function App() {
                                         setDurationError(null);
                                       }}
                                       className="w-8 h-8 flex items-center justify-center text-[#030925]/50 hover:text-[#030925]"
-                                      aria-label={`Modifier la durée de ${track.title}`}
+                                      aria-label={`${t.tracksView.editDurationAriaPrefix} ${track.title}`}
                                     >
                                       <Pencil className="w-3.5 h-3.5" />
                                     </button>
@@ -1022,7 +1042,7 @@ export default function App() {
                                       ) : (
                                         <Search className="w-3.5 h-3.5" />
                                       )}
-                                      <span>Durée</span>
+                                      <span>{t.tracksView.durationSearchBtn}</span>
                                     </button>
                                     <button
                                       type="button"
@@ -1032,7 +1052,7 @@ export default function App() {
                                         setDurationError(null);
                                       }}
                                       className="w-9 h-9 flex items-center justify-center text-[#030925]/50"
-                                      aria-label={`Saisir manuellement la durée de ${track.title}`}
+                                      aria-label={`${t.tracksView.manualDurationAriaPrefix} ${track.title}`}
                                     >
                                       <Pencil className="w-3.5 h-3.5" />
                                     </button>
@@ -1074,7 +1094,8 @@ export default function App() {
                                     onClick={() => setSelectedEmissionSlug(app.emission_slug)}
                                     className="font-mono tabular-nums font-semibold text-[#144980] hover:underline py-1 whitespace-nowrap"
                                   >
-                                    nº {app.emission_number ?? app.emission_slug}
+                                    {numPrefix}
+                                    {app.emission_number ?? app.emission_slug}
                                   </button>
                                   <span aria-hidden="true" className="text-[#030925]/30">
                                     ·
@@ -1082,7 +1103,7 @@ export default function App() {
                                   <span className="font-mono tabular-nums text-[#030925]/75">
                                     {app.broadcast_date_label ||
                                       app.broadcast_date ||
-                                      'Date inconnue'}
+                                      t.tracksView.dateUnknown}
                                   </span>
                                   {app.version !== 'standard' && (
                                     <>
@@ -1108,8 +1129,10 @@ export default function App() {
                                   }
                                   className="text-xs text-[#144980] font-semibold py-1.5"
                                 >
-                                  + {hiddenCount} autre{hiddenCount > 1 ? 's' : ''} diffusion
-                                  {hiddenCount > 1 ? 's' : ''}
+                                  + {hiddenCount}{' '}
+                                  {hiddenCount > 1
+                                    ? t.tracksView.otherBroadcastPlural
+                                    : t.tracksView.otherBroadcastSingular}
                                 </button>
                               )}
 
@@ -1124,7 +1147,7 @@ export default function App() {
                                   }
                                   className="text-xs text-[#030925]/60 py-1.5"
                                 >
-                                  Réduire
+                                  {t.tracksView.collapse}
                                 </button>
                               )}
                             </div>
@@ -1139,11 +1162,11 @@ export default function App() {
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="border-b border-[#DDD8D0] bg-[#030925] text-xs font-display font-semibold uppercase tracking-wider text-[#ECE8E1]">
-                          <th className="py-3 px-4 w-[28%]">Titre &amp; Label</th>
-                          <th className="py-3 px-4 w-[20%]">Auteur</th>
-                          <th className="py-3 px-4 w-[12%] text-right">Durée</th>
-                          <th className="py-3 px-4 w-[12%]">Origine</th>
-                          <th className="py-3 px-4 w-[28%]">Émissions &amp; dates de diffusion</th>
+                          <th className="py-3 px-4 w-[28%]">{t.tracksView.colTitleLabel}</th>
+                          <th className="py-3 px-4 w-[20%]">{t.tracksView.colAuthor}</th>
+                          <th className="py-3 px-4 w-[12%] text-right">{t.tracksView.colDuration}</th>
+                          <th className="py-3 px-4 w-[12%]">{t.tracksView.colOrigin}</th>
+                          <th className="py-3 px-4 w-[28%]">{t.tracksView.colEmissions}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#DDD8D0]/70 text-sm">
@@ -1171,11 +1194,10 @@ export default function App() {
                           <tr>
                             <td colSpan={5} className="py-16 px-6 text-center">
                               <p className="text-sm font-semibold text-[#030925]">
-                                Aucun titre ne correspond à vos critères
+                                {t.tracksView.emptyTitle}
                               </p>
                               <p className="text-xs text-[#030925]/65 mt-1">
-                                Essayez un autre mot-clé, supprimez un filtre ou lancez une
-                                synchronisation.
+                                {t.tracksView.emptyDesc}
                               </p>
                               {hasActiveFilters && (
                                 <button
@@ -1183,7 +1205,7 @@ export default function App() {
                                   onClick={resetFilters}
                                   className="mt-4 px-3.5 py-1.5 text-xs font-semibold text-[#144980] border border-[#DDD8D0] bg-white rounded-md hover:border-[#144980]"
                                 >
-                                  Réinitialiser les filtres
+                                  {t.tracksView.emptyReset}
                                 </button>
                               )}
                             </td>
@@ -1209,8 +1231,8 @@ export default function App() {
                                         type="button"
                                         onClick={() => togglePreview(track.id)}
                                         className="mt-0.5 p-1.5 rounded text-[#144980] hover:bg-[#9ECAC2]/30 transition-colors shrink-0"
-                                        title="Écouter un extrait audio de 30 secondes"
-                                        aria-label={`Extrait de ${track.title}`}
+                                        title={t.tracksView.playTitle}
+                                        aria-label={`${t.tracksView.playAriaPrefix} ${track.title}`}
                                       >
                                         {playingPreviewTrackId === track.id ? (
                                           <Pause className="w-3.5 h-3.5" />
@@ -1238,7 +1260,7 @@ export default function App() {
                                     type="button"
                                     onClick={() => setAuthorFilter(track.author)}
                                     className="text-left font-semibold text-[#144980] hover:text-[#030925] hover:underline leading-snug"
-                                    title={`Filtrer par ${track.author}`}
+                                    title={`${t.tracksView.filterByPrefix} ${track.author}`}
                                   >
                                     {track.author}
                                   </button>
@@ -1265,7 +1287,7 @@ export default function App() {
                                           type="button"
                                           onClick={() => handleSaveManualDuration(track.id)}
                                           className="p-1 text-emerald-800 hover:bg-emerald-100 rounded"
-                                          aria-label="Enregistrer la durée"
+                                          aria-label={t.tracksView.saveDurationAria}
                                         >
                                           <Check className="w-3.5 h-3.5" />
                                         </button>
@@ -1276,7 +1298,7 @@ export default function App() {
                                             setDurationError(null);
                                           }}
                                           className="p-1 text-[#030925]/50 hover:text-[#030925] rounded"
-                                          aria-label="Annuler"
+                                          aria-label={t.tracksView.cancelAria}
                                         >
                                           <X className="w-3.5 h-3.5" />
                                         </button>
@@ -1293,7 +1315,7 @@ export default function App() {
                                         className="font-mono tabular-nums text-[#030925]"
                                         title={
                                           track.duration_source
-                                            ? `Source : ${track.duration_source}`
+                                            ? `${t.tracksView.sourcePrefix} ${track.duration_source}`
                                             : undefined
                                         }
                                       >
@@ -1307,8 +1329,8 @@ export default function App() {
                                           setDurationError(null);
                                         }}
                                         className="opacity-0 group-hover:opacity-100 focus:opacity-100 [@media(hover:none)]:opacity-100 p-1 text-[#030925]/45 hover:text-[#030925] transition-opacity"
-                                        title="Modifier la durée"
-                                        aria-label={`Modifier la durée de ${track.title}`}
+                                        title={t.tracksView.durationTitle}
+                                        aria-label={`${t.tracksView.editDurationAriaPrefix} ${track.title}`}
                                       >
                                         <Pencil className="w-3 h-3" />
                                       </button>
@@ -1320,14 +1342,14 @@ export default function App() {
                                         disabled={enrichingTrackId === track.id}
                                         onClick={() => handleEnrichSingleTrack(track.id)}
                                         className="inline-flex items-center gap-1 text-xs text-[#030925]/70 hover:text-[#144980] px-1.5 py-0.5 rounded bg-white border border-[#DDD8D0] hover:border-[#144980] transition-colors"
-                                        title="Rechercher la durée sur Deezer / iTunes"
+                                        title={t.tracksView.durationSearchTitle}
                                       >
                                         {enrichingTrackId === track.id ? (
                                           <Loader2 className="w-3 h-3 animate-spin" />
                                         ) : (
                                           <Search className="w-3 h-3" />
                                         )}
-                                        <span>Chercher</span>
+                                        <span>{t.tracksView.durationSearchBtn}</span>
                                       </button>
                                       <button
                                         type="button"
@@ -1337,8 +1359,8 @@ export default function App() {
                                           setDurationError(null);
                                         }}
                                         className="p-1 text-[#030925]/45 hover:text-[#030925]"
-                                        title="Saisir la durée manuellement"
-                                        aria-label={`Saisir manuellement la durée de ${track.title}`}
+                                        title={t.tracksView.durationTitle}
+                                        aria-label={`${t.tracksView.manualDurationAriaPrefix} ${track.title}`}
                                       >
                                         <Pencil className="w-3 h-3" />
                                       </button>
@@ -1364,7 +1386,8 @@ export default function App() {
                                           onClick={() => setSelectedEmissionSlug(app.emission_slug)}
                                           className="font-mono tabular-nums font-semibold text-[#144980] hover:text-[#030925] hover:underline whitespace-nowrap"
                                         >
-                                          nº {app.emission_number ?? app.emission_slug}
+                                          {numPrefix}
+                                          {app.emission_number ?? app.emission_slug}
                                         </button>
                                         <span aria-hidden="true" className="text-[#030925]/30">
                                           ·
@@ -1372,7 +1395,7 @@ export default function App() {
                                         <span className="font-mono tabular-nums text-[#030925]/75 whitespace-nowrap">
                                           {app.broadcast_date_label ||
                                             app.broadcast_date ||
-                                            'Date inconnue'}
+                                            t.tracksView.dateUnknown}
                                         </span>
                                         {app.version !== 'standard' && (
                                           <>
@@ -1398,8 +1421,10 @@ export default function App() {
                                         }
                                         className="text-xs text-[#144980] hover:underline font-semibold"
                                       >
-                                        + {hiddenCount} autre{hiddenCount > 1 ? 's' : ''} diffusion
-                                        {hiddenCount > 1 ? 's' : ''}
+                                        + {hiddenCount}{' '}
+                                        {hiddenCount > 1
+                                          ? t.tracksView.otherBroadcastPlural
+                                          : t.tracksView.otherBroadcastSingular}
                                       </button>
                                     )}
 
@@ -1414,7 +1439,7 @@ export default function App() {
                                         }
                                         className="text-xs text-[#030925]/60 hover:text-[#030925] hover:underline"
                                       >
-                                        Réduire
+                                        {t.tracksView.collapse}
                                       </button>
                                     )}
                                   </div>
@@ -1444,7 +1469,7 @@ export default function App() {
           <footer className="bg-[#144980] text-[#ECE8E1] mt-auto">
             <div className="max-w-[1360px] mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-center sm:text-left">
               <span>
-                La Planète Bleue FanStats · Par{' '}
+                La Planète Bleue FanStats · {t.footer.by}{' '}
                 <a
                   href="https://www.linkedin.com/in/fredneau/"
                   target="_blank"
@@ -1463,7 +1488,7 @@ export default function App() {
                   }}
                   className="text-[#ECE8E1]/90 hover:text-[#9ECAC2] hover:underline font-semibold py-1"
                 >
-                  Mentions légales
+                  {t.footer.legal}
                 </button>
                 <span className="text-white/25" aria-hidden="true">
                   ·
@@ -1474,7 +1499,7 @@ export default function App() {
                   rel="noopener noreferrer"
                   className="text-[#9ECAC2] hover:underline font-semibold py-1"
                 >
-                  Source officielle : laplanetebleue.com
+                  {t.footer.officialSource}
                 </a>
               </div>
             </div>

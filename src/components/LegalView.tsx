@@ -1,10 +1,13 @@
 import { ExternalLink, Globe, Heart, Music, Radio, ShieldCheck, User } from 'lucide-react';
+import { useI18n } from '../i18n';
 
 interface LegalViewProps {
   onNavigate: (tab: 'tracks' | 'stats' | 'globe') => void;
 }
 
 export function LegalView({ onNavigate }: LegalViewProps) {
+  const { t } = useI18n();
+
   return (
     <section className="space-y-6 max-w-4xl mx-auto">
       {/* Main Creator & Fan Project Statement */}
@@ -15,7 +18,7 @@ export function LegalView({ onNavigate }: LegalViewProps) {
           </div>
           <div className="space-y-1">
             <p className="text-xs font-display font-semibold uppercase tracking-wider text-[#144980]">
-              À propos du projet · Mentions légales
+              {t.legalView.kicker}
             </p>
             <h2 className="font-display text-xl sm:text-2xl font-bold text-[#030925]">
               La Planète Bleue FanStats
@@ -25,12 +28,11 @@ export function LegalView({ onNavigate }: LegalViewProps) {
 
         <div className="bg-[#ECE8E1]/65 border border-[#144980]/25 rounded-lg px-4 sm:px-5 py-4 space-y-3 text-sm sm:text-base text-[#030925] leading-relaxed">
           <p>
-            Ce site a été conçu et développé par{' '}
-            <strong className="font-bold text-[#030925]">Fred Neau / un ecologeek</strong>, en pur
-            fan et pour mon propre plaisir, en espérant que ça plaira et permettra à plein de gens
-            de découvrir{' '}
+            {t.legalView.statementBeforeAuthor}
+            <strong className="font-bold text-[#030925]">Fred Neau / un ecologeek</strong>
+            {t.legalView.statementMiddle}
             <em className="italic font-semibold text-[#144980]">
-              le meilleur podcast de l’univers connu
+              {t.legalView.statementQuote}
             </em>
             .
           </p>
@@ -42,7 +44,7 @@ export function LegalView({ onNavigate }: LegalViewProps) {
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[44px] text-xs font-semibold rounded-md bg-white text-[#144980] border border-[#DDD8D0] hover:border-[#144980] transition-colors"
             >
               <Radio className="w-3.5 h-3.5" />
-              <span>Site officiel de La Planète Bleue</span>
+              <span>{t.legalView.officialSiteBtn}</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
@@ -53,14 +55,15 @@ export function LegalView({ onNavigate }: LegalViewProps) {
             <div className="flex items-center gap-2 text-[#144980]">
               <Radio className="w-4 h-4 shrink-0" />
               <h3 className="font-display text-sm font-bold uppercase tracking-wider text-[#030925]">
-                Projet fan indépendant
+                {t.legalView.card1Title}
               </h3>
             </div>
             <p className="text-sm text-[#030925]/80 leading-relaxed">
-              <strong>La Planète Bleue FanStats</strong> est une archive analytique et exploratoire
-              non officielle, sans aucun but lucratif ni publicitaire. L’émission{' '}
-              <em>La Planète Bleue</em>, ses sélections musicales, son nom et ses textes éditoriaux
-              restent la propriété exclusive d’<strong>Yves Blanc</strong> et de{' '}
+              <strong>La Planète Bleue FanStats</strong> {t.legalView.card1Part1}
+              <em>La Planète Bleue</em>
+              {t.legalView.card1Part2}
+              <strong>Yves Blanc</strong>
+              {t.legalView.card1And}
               <a
                 href="https://laplanetebleue.com/"
                 target="_blank"
@@ -77,15 +80,11 @@ export function LegalView({ onNavigate }: LegalViewProps) {
             <div className="flex items-center gap-2 text-[#144980]">
               <Music className="w-4 h-4 shrink-0" />
               <h3 className="font-display text-sm font-bold uppercase tracking-wider text-[#030925]">
-                Données, visuels &amp; extraits audio
+                {t.legalView.card2Title}
               </h3>
             </div>
             <p className="text-sm text-[#030925]/80 leading-relaxed">
-              Les playlists indexées proviennent des fiches publiques des émissions. Les durées
-              manquantes et courts extraits audio de 30 secondes sont récupérés à des fins
-              documentaires via les API publiques Deezer et Apple iTunes. Aucune illustration ou
-              photographie soumise à des droits d’auteur n’est utilisée : tous les visuels orbitaux
-              et le globe 3D sont générés procéduralement.
+              {t.legalView.card2Body}
             </p>
           </div>
 
@@ -93,13 +92,11 @@ export function LegalView({ onNavigate }: LegalViewProps) {
             <div className="flex items-center gap-2 text-[#144980]">
               <ShieldCheck className="w-4 h-4 shrink-0" />
               <h3 className="font-display text-sm font-bold uppercase tracking-wider text-[#030925]">
-                Données personnelles &amp; cookies
+                {t.legalView.card3Title}
               </h3>
             </div>
             <p className="text-sm text-[#030925]/80 leading-relaxed">
-              Ce site ne requiert aucune création de compte, ne collecte aucune donnée personnelle,
-              n’effectue aucun profilage et ne dépose aucun cookie publicitaire ou de suivi
-              statistique tiers.
+              {t.legalView.card3Body}
             </p>
           </div>
 
@@ -107,12 +104,11 @@ export function LegalView({ onNavigate }: LegalViewProps) {
             <div className="flex items-center gap-2 text-[#144980]">
               <User className="w-4 h-4 shrink-0" />
               <h3 className="font-display text-sm font-bold uppercase tracking-wider text-[#030925]">
-                Contact &amp; demandes
+                {t.legalView.card4Title}
               </h3>
             </div>
             <p className="text-sm text-[#030925]/80 leading-relaxed">
-              Pour toute remarque, suggestion d’amélioration ou demande concernant ce projet fan,
-              vous pouvez contacter Fred Neau / un ecologeek directement sur LinkedIn :
+              {t.legalView.card4Body}
             </p>
             <div>
               <a
@@ -122,7 +118,7 @@ export function LegalView({ onNavigate }: LegalViewProps) {
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[44px] text-xs font-semibold rounded-md bg-[#030925] text-[#FAF8F5] hover:bg-[#144980] transition-colors"
               >
                 <User className="w-3.5 h-3.5 text-[#9ECAC2]" />
-                <span>Profil LinkedIn de Fred Neau</span>
+                <span>{t.legalView.card4LinkedIn}</span>
                 <ExternalLink className="w-3.5 h-3.5 text-[#9ECAC2]" />
               </a>
             </div>
@@ -135,14 +131,14 @@ export function LegalView({ onNavigate }: LegalViewProps) {
             onClick={() => onNavigate('tracks')}
             className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] text-xs font-semibold rounded-md bg-[#030925] text-[#FAF8F5] hover:bg-[#144980] transition-colors"
           >
-            Explorer la base des titres
+            {t.legalView.ctaTracks}
           </button>
           <button
             type="button"
             onClick={() => onNavigate('stats')}
             className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] text-xs font-semibold rounded-md bg-white text-[#030925] border border-[#DDD8D0] hover:border-[#144980] transition-colors"
           >
-            Voir les statistiques
+            {t.legalView.ctaStats}
           </button>
           <button
             type="button"
@@ -150,7 +146,7 @@ export function LegalView({ onNavigate }: LegalViewProps) {
             className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 min-h-[44px] text-xs font-semibold rounded-md bg-white text-[#144980] border border-[#DDD8D0] hover:border-[#144980] transition-colors"
           >
             <Globe className="w-3.5 h-3.5" />
-            <span>Ouvrir la Vue 3D</span>
+            <span>{t.legalView.ctaGlobe}</span>
           </button>
         </div>
       </article>

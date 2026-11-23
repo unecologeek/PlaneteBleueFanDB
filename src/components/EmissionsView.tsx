@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
-import { formatNumberFR } from '../types';
+import { useI18n } from '../i18n';
 import type { EmissionRecord } from '../types';
 import { EmissionOrbitalEmblem } from './EmissionOrbitalEmblem';
 import { InfiniteSentinel } from './InfiniteSentinel';
@@ -11,6 +11,7 @@ interface EmissionsViewProps {
 }
 
 export function EmissionsView({ years, onSelectEmission }: EmissionsViewProps) {
+  const { t, formatNum } = useI18n();
   const [q, setQ] = useState('');
   const [year, setYear] = useState<string>('');
   const [items, setItems] = useState<EmissionRecord[]>([]);
@@ -65,7 +66,7 @@ export function EmissionsView({ years, onSelectEmission }: EmissionsViewProps) {
             type="text"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Filtrer par numéro (ex : 1054), date ou mot-clé…"
+            placeholder={t.emissionsView.searchPlaceholder}
             className="w-full pl-9 pr-3 py-2.5 sm:py-2 min-h-[44px] text-base sm:text-sm bg-white border border-[#DDD8D0] rounded-md focus:outline-none focus:border-[#144980] transition-colors"
           />
         </div>
@@ -74,19 +75,20 @@ export function EmissionsView({ years, onSelectEmission }: EmissionsViewProps) {
           <select
             value={year}
             onChange={(e) => setYear(e.target.value)}
-            aria-label="Filtrer par année"
+            aria-label={t.emissionsView.yearAria}
             className="flex-1 sm:flex-initial min-h-[44px] px-3 py-2 text-base sm:text-sm bg-white border border-[#DDD8D0] rounded-md focus:outline-none focus:border-[#144980]"
           >
-            <option value="">Toutes les années</option>
+            <option value="">{t.emissionsView.allYears}</option>
             {years.map((y) => (
               <option key={y.year} value={String(y.year)}>
-                {y.year} ({y.count})
+                {y.year} ({formatNum(y.count)})
               </option>
             ))}
           </select>
 
           <span className="text-xs font-mono tabular-nums text-[#030925]/65 whitespace-nowrap shrink-0">
-            {formatNumberFR(total)} émission{total > 1 ? 's' : ''}
+            {formatNum(total)}{' '}
+            {total > 1 ? t.emissionsView.emissionPlural : t.emissionsView.emissionSingular}
           </span>
         </div>
       </div>
@@ -108,9 +110,9 @@ export function EmissionsView({ years, onSelectEmission }: EmissionsViewProps) {
         </div>
       ) : items.length === 0 ? (
         <div className="bg-[#FAF8F5] border border-[#DDD8D0] rounded-lg py-16 px-6 text-center space-y-2">
-          <p className="text-sm font-medium text-[#030925]">Aucune émission trouvée</p>
+          <p className="text-sm font-medium text-[#030925]">{t.emissionsView.emptyTitle}</p>
           <p className="text-xs text-[#030925]/65">
-            Modifiez votre recherche ou réinitialisez le filtre d’année.
+            {t.emissionsView.emptyDesc}
           </p>
         </div>
       ) : (
@@ -130,10 +132,11 @@ export function EmissionsView({ years, onSelectEmission }: EmissionsViewProps) {
                 <div>
                   <div className="flex items-baseline justify-between gap-2">
                     <h3 className="font-display text-base font-semibold text-[#030925] group-hover:text-[#144980] transition-colors">
-                      La Planète Bleue nº {em.number ?? em.slug}
+                      {t.emissionsView.cardTitlePrefix}
+                      {em.number ?? em.slug}
                     </h3>
                     <span className="text-xs font-mono tabular-nums text-[#144980] shrink-0">
-                      {em.track_count} titres
+                      {formatNum(em.track_count)} {t.emissionsView.tracksUnit}
                     </span>
                   </div>
                   {em.subtitle && (
@@ -145,7 +148,7 @@ export function EmissionsView({ years, onSelectEmission }: EmissionsViewProps) {
 
                 <div className="text-xs text-[#030925]/65 pt-1 flex items-center gap-1.5">
                   <span className="font-mono tabular-nums">
-                    {em.broadcast_date_label || em.broadcast_date || 'Date inconnue'}
+                    {em.broadcast_date_label || em.broadcast_date || t.emissionsView.dateUnknown}
                   </span>
                   {em.duration_sec && (
                     <>
